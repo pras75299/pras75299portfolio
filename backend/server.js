@@ -9,7 +9,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import projectRoutes from "./routes/projectRoutes.js";
 //import messageRoutes from './routes/messageRoutes.js';
 //import experienceRoutes from './routes/experienceRoutes.js';
-//import skillRoutes from './routes/skillRoutes.js';
+import skillRoutes from "./routes/skillRoutes.js";
 
 config();
 
@@ -36,7 +36,7 @@ app.use(limiter);
 app.use("/api/projects", projectRoutes);
 // app.use('/api/messages', messageRoutes);
 // app.use('/api/experience', experienceRoutes);
-// app.use('/api/skills', skillRoutes);
+app.use("/api/skills", skillRoutes);
 
 // Error handling
 app.use(errorHandler);
