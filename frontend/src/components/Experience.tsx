@@ -1,7 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { Briefcase, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import { Briefcase, Calendar } from "lucide-react";
+import axios from "axios";
 
 interface ExperienceItem {
   title: string;
@@ -11,46 +12,13 @@ interface ExperienceItem {
   technologies: string[];
 }
 
-const experiences: ExperienceItem[] = [
-  {
-    title: "Senior Frontend Developer",
-    company: "Tech Innovators Inc.",
-    period: "2022 - Present",
-    description: [
-      "Led the development of a next-generation SaaS platform",
-      "Improved application performance by 40%",
-      "Mentored junior developers and conducted code reviews"
-    ],
-    technologies: ["React", "TypeScript", "Next.js", "GraphQL"]
-  },
-  {
-    title: "Full Stack Developer",
-    company: "Digital Solutions Ltd",
-    period: "2020 - 2022",
-    description: [
-      "Developed and maintained multiple client projects",
-      "Implemented CI/CD pipelines",
-      "Reduced server response time by 60%"
-    ],
-    technologies: ["React", "Node.js", "PostgreSQL", "Docker"]
-  },
-  {
-    title: "Frontend Developer",
-    company: "Creative Web Agency",
-    period: "2018 - 2020",
-    description: [
-      "Built responsive web applications",
-      "Collaborated with designers to implement pixel-perfect UIs",
-      "Optimized website performance and SEO"
-    ],
-    technologies: ["React", "JavaScript", "SASS", "Webpack"]
-  }
-];
-
-const ExperienceCard: React.FC<{ experience: ExperienceItem; index: number }> = ({ experience, index }) => {
+const ExperienceCard: React.FC<{
+  experience: ExperienceItem;
+  index: number;
+}> = ({ experience, index }) => {
   const [ref, inView] = useInView({
     triggerOnce: true,
-    threshold: 0.1
+    threshold: 0.1,
   });
 
   return (
@@ -61,12 +29,8 @@ const ExperienceCard: React.FC<{ experience: ExperienceItem; index: number }> = 
       transition={{ duration: 0.5, delay: index * 0.2 }}
       className="relative pl-8 pb-8"
     >
-      {/* Timeline line */}
       <div className="absolute left-[7px] top-2 bottom-0 w-[2px] bg-gray-200 dark:bg-gray-700" />
-      
-      {/* Timeline dot */}
       <div className="absolute left-0 top-2 w-4 h-4 rounded-full bg-primary-light dark:bg-primary-dark" />
-      
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -77,12 +41,12 @@ const ExperienceCard: React.FC<{ experience: ExperienceItem; index: number }> = 
             <span className="text-sm">{experience.period}</span>
           </div>
         </div>
-        
+
         <div className="flex items-center text-primary-light dark:text-primary-dark mb-4">
           <Briefcase className="w-4 h-4 mr-2" />
           <span className="font-medium">{experience.company}</span>
         </div>
-        
+
         <ul className="mb-4 space-y-2">
           {experience.description.map((item, i) => (
             <li key={i} className="text-gray-600 dark:text-gray-300 text-sm">
@@ -90,7 +54,7 @@ const ExperienceCard: React.FC<{ experience: ExperienceItem; index: number }> = 
             </li>
           ))}
         </ul>
-        
+
         <div className="flex flex-wrap gap-2">
           {experience.technologies.map((tech, i) => (
             <span
@@ -107,10 +71,40 @@ const ExperienceCard: React.FC<{ experience: ExperienceItem; index: number }> = 
 };
 
 export const Experience = () => {
+  const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
   const [ref, inView] = useInView({
     triggerOnce: true,
-    threshold: 0.1
+    threshold: 0.1,
   });
+
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/experiences"
+        );
+        const data = response.data.map((exp: any) => ({
+          ...exp,
+          period: `${new Date(exp.startDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+          })} - ${
+            exp.current
+              ? "Present"
+              : new Date(exp.endDate).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                })
+          }`,
+        }));
+        setExperiences(data);
+      } catch (error) {
+        console.error("Error fetching experiences:", error);
+      }
+    };
+
+    fetchExperiences();
+  }, []);
 
   return (
     <section className="py-20 bg-gray-50 dark:bg-gray-900" id="experience">
@@ -131,11 +125,7 @@ export const Experience = () => {
 
         <div className="relative">
           {experiences.map((experience, index) => (
-            <ExperienceCard
-              key={index}
-              experience={experience}
-              index={index}
-            />
+            <ExperienceCard key={index} experience={experience} index={index} />
           ))}
         </div>
       </div>
