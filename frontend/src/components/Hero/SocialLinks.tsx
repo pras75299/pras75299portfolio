@@ -1,12 +1,16 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Github, Linkedin, Mail } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { Github, Linkedin, Twitter } from "lucide-react";
 
 export const SocialLinks = () => {
   const socialLinks = [
-    { Icon: Github, href: "https://github.com", label: "GitHub" },
-    { Icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-    { Icon: Mail, href: "mailto:contact@example.com", label: "Email" },
+    { Icon: Github, href: "https://github.com/pras75299", label: "GitHub" },
+    {
+      Icon: Linkedin,
+      href: "https://www.linkedin.com/in/wordsprashant/",
+      label: "LinkedIn",
+    },
+    { Icon: Twitter, href: "https://x.com/asNobodyLikes", label: "Twitter" },
   ];
 
   return (
@@ -22,10 +26,10 @@ export const SocialLinks = () => {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          whileHover={{ 
+          whileHover={{
             scale: 1.2,
             rotate: 360,
-            transition: { duration: 0.5 }
+            transition: { duration: 0.5 },
           }}
           whileTap={{ scale: 0.9 }}
           className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
