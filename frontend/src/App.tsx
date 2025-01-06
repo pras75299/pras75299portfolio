@@ -1,11 +1,10 @@
-import React from 'react';
-import { Hero } from './components/Hero/Hero';
-import { Projects } from './components/Projects';
-import { Skills } from './components/Skills';
-import { Experience } from './components/Experience';
-import { Contact } from './components/Contact';
-import { Navbar } from './components/Navbar';
-import { ThemeProvider } from './context/ThemeContext';
+import React from "react";
+import { Hero } from "./components/Hero/Hero";
+import { Projects } from "./components/Projects";
+import { Skills } from "./components/Skills";
+import { Experience } from "./components/Experience";
+import { Navbar } from "./components/Navbar";
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   return (
@@ -16,7 +15,6 @@ function App() {
         <Projects />
         <Experience />
         <Skills />
-        <Contact />
       </div>
     </ThemeProvider>
   );
