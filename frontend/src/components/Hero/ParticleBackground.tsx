@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 
 interface Square {
   x: number;
@@ -18,9 +18,9 @@ export const ParticleBackground = () => {
   const createSquare = (x: number, y: number): Square => ({
     x,
     y,
-    size: Math.random() * 20 + 10,
+    size: Math.random() * 30 + 10,
     rotation: Math.random() * 360,
-    speed: Math.random() * 0.5 + 0.2,
+    speed: Math.random() * 0.1 + 0.1,
     color: `rgba(37, 99, 235, ${Math.random() * 0.2 + 0.1})`,
     direction: Math.random() > 0.5 ? 1 : -1,
   });
@@ -29,7 +29,7 @@ export const ParticleBackground = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const resizeCanvas = () => {
@@ -40,7 +40,7 @@ export const ParticleBackground = () => {
     const initSquares = () => {
       squares.current = [];
       const squareCount = Math.min(Math.max(window.innerWidth / 40, 20), 50);
-      
+
       for (let i = 0; i < squareCount; i++) {
         squares.current.push(
           createSquare(
@@ -58,7 +58,12 @@ export const ParticleBackground = () => {
       ctx.translate(square.x + square.size / 2, square.y + square.size / 2);
       ctx.rotate((square.rotation * Math.PI) / 180);
       ctx.fillStyle = square.color;
-      ctx.fillRect(-square.size / 2, -square.size / 2, square.size, square.size);
+      ctx.fillRect(
+        -square.size / 2,
+        -square.size / 2,
+        square.size,
+        square.size
+      );
       ctx.restore();
     };
 
@@ -86,7 +91,7 @@ export const ParticleBackground = () => {
       if (!ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       squares.current.forEach((square) => {
         updateSquare(square);
         drawSquare(square);
@@ -99,13 +104,13 @@ export const ParticleBackground = () => {
     initSquares();
     animate();
 
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       resizeCanvas();
       initSquares();
     });
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener("resize", resizeCanvas);
     };
   }, []);
 
