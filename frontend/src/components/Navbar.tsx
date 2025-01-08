@@ -1,45 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Menu } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
-import { MobileMenu } from './MobileMenu';
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Menu } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
+import { MobileMenu } from "./MobileMenu";
 
 const navItems = [
-  { name: 'Home', href: '#home' },
-  { name: 'Projects', href: '#projects' },
-  { name: 'Experience', href: '#experience' },
-  { name: 'Skills', href: '#skills' },
-  { name: 'Contact', href: '#contact' },
+  { name: "Home", href: "#home" },
+  { name: "Projects", href: "#projects" },
+  { name: "Experience", href: "#experience" },
+  { name: "Skills", href: "#skills" },
 ];
 
 export const Navbar = () => {
-  const [activeSection, setActiveSection] = useState('Home');
+  const [activeSection, setActiveSection] = useState("Home");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleScroll = () => {
-    const sections = document.querySelectorAll('section');
-    const scrollPosition = window.scrollY + 100;
+    const sections = document.querySelectorAll("section");
+    const scrollPosition = window.scrollY + window.innerHeight / 2; // Use midpoint of viewport
     setIsScrolled(window.scrollY > 20);
+
+    let currentSection = "Home"; // Default section
 
     sections.forEach((section) => {
       const sectionTop = section.offsetTop;
       const sectionHeight = section.clientHeight;
       const sectionId = section.id;
 
-      if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-        if (sectionId) {
-          setActiveSection(sectionId.charAt(0).toUpperCase() + sectionId.slice(1));
-        } else if (scrollPosition < window.innerHeight) {
-          setActiveSection('Home');
-        }
+      if (
+        scrollPosition >= sectionTop &&
+        scrollPosition < sectionTop + sectionHeight
+      ) {
+        currentSection = sectionId
+          ? sectionId.charAt(0).toUpperCase() + sectionId.slice(1)
+          : "Home";
       }
     });
+
+    setActiveSection(currentSection);
   };
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -53,9 +57,9 @@ export const Navbar = () => {
         >
           <motion.div
             className={`flex items-center justify-between backdrop-blur-lg rounded-full px-6 py-3 transition-all duration-300 ${
-              isScrolled 
-                ? 'bg-white/90 dark:bg-gray-900/90 shadow-lg dark:shadow-none' 
-                : 'bg-white/50 dark:bg-gray-900/50'
+              isScrolled
+                ? "bg-white/90 dark:bg-gray-900/90 shadow-lg dark:shadow-none"
+                : "bg-white/50 dark:bg-gray-900/50"
             }`}
             layoutId="navbar"
             layout
@@ -68,14 +72,14 @@ export const Navbar = () => {
                   href={item.href}
                   className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     activeSection === item.name
-                      ? 'text-gray-900 dark:text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      ? "text-gray-900 dark:text-white"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
                     const element = document.querySelector(item.href);
                     if (element) {
-                      element.scrollIntoView({ behavior: 'smooth' });
+                      element.scrollIntoView({ behavior: "smooth" });
                     }
                   }}
                 >
@@ -87,7 +91,7 @@ export const Navbar = () => {
                       transition={{
                         type: "spring",
                         stiffness: 380,
-                        damping: 30
+                        damping: 30,
                       }}
                     />
                   )}
