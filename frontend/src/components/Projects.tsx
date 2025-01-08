@@ -1,64 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { ProjectCard } from "./ProjectCard";
-
-const projects = [
-  {
-    title: "Modern E-commerce Platform",
-    image:
-      "https://images.unsplash.com/photo-1661956602116-aa6865609028?auto=format&fit=crop&w=1400&q=80",
-    tech: ["React", "TypeScript", "Node.js", "Stripe"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "Full Stack",
-  },
-  {
-    title: "AI-Powered Analytics Dashboard",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80",
-    tech: ["Next.js", "TensorFlow.js", "D3.js"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "Frontend",
-  },
-  {
-    title: "Social Media Platform",
-    image:
-      "https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=1400&q=80",
-    tech: ["React", "GraphQL", "WebSocket"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "Full Stack",
-  },
-  {
-    title: "Smart Home IoT Dashboard",
-    image:
-      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1400&q=80",
-    tech: ["Vue.js", "MQTT", "Node-RED", "WebSocket"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "IoT",
-  },
-  {
-    title: "Blockchain Explorer",
-    image:
-      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1400&q=80",
-    tech: ["React", "Web3.js", "Ethers.js", "TypeScript"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "Web3",
-  },
-  {
-    title: "AI Image Generator",
-    image:
-      "https://images.unsplash.com/photo-1686191128892-3261ef360667?auto=format&fit=crop&w=1400&q=80",
-    tech: ["Next.js", "OpenAI API", "TailwindCSS"],
-    github: "https://github.com",
-    live: "https://example.com",
-    category: "AI/ML",
-  },
-];
+import axios from "axios";
 
 export const Projects = () => {
   const [ref, inView] = useInView({
@@ -66,12 +10,59 @@ export const Projects = () => {
     threshold: 0.1,
   });
 
+  const [projects, setProjects] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/projects/");
+        const mappedProjects = response.data.map(
+          (project: {
+            title: any;
+            image: any;
+            technologies: any;
+            githubUrl: any;
+            liveUrl: any;
+            category: any;
+          }) => ({
+            title: project.title,
+            image: project.image,
+            tech: project.technologies,
+            github: project.githubUrl,
+            live: project.liveUrl,
+            category: project.category,
+          })
+        );
+        setProjects(mappedProjects);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const visibleProjects = projects.slice(
     Math.max(0, activeIndex - 2),
     Math.min(projects.length, activeIndex + 3)
   );
+
+  if (loading) {
+    return (
+      <section
+        className="py-20 bg-background-light dark:bg-background-dark overflow-hidden"
+        id="projects"
+      >
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p>Loading projects...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
