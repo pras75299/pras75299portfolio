@@ -1,14 +1,17 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Mail, MapPin, Phone, Send, ExternalLink } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { Mail, MapPin, Phone, Send, ExternalLink } from "lucide-react";
 
 export const Contact = () => {
   return (
-    <section className="py-20 bg-background-light dark:bg-background-dark relative overflow-hidden" id="contact">
+    <section
+      className="py-20 bg-background-light dark:bg-background-dark relative overflow-hidden"
+      id="contact"
+    >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary-light/5 dark:to-primary-dark/5" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(37,99,235,0.05),transparent_50%)]" />
-      
+
       <div className="max-w-6xl mx-auto px-4 relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -21,7 +24,8 @@ export const Contact = () => {
             Get In Touch
           </h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Let's discuss your project and see how we can work together to create something amazing
+            Let's discuss your project and see how we can work together to
+            create something amazing
           </p>
         </motion.div>
 
@@ -39,9 +43,12 @@ export const Contact = () => {
               </h3>
               <div className="space-y-6">
                 {[
-                  { Icon: MapPin, text: "123 Developer Street, Code City", label: "Location" },
-                  { Icon: Phone, text: "+1 234 567 890", label: "Phone" },
-                  { Icon: Mail, text: "contact@example.com", label: "Email" }
+                  { Icon: MapPin, text: "Based In India", label: "Location" },
+                  {
+                    Icon: Mail,
+                    text: "prashantsingh11294@gmail.com",
+                    label: "Email",
+                  },
                 ].map(({ Icon, text, label }, index) => (
                   <motion.div
                     key={index}
@@ -55,31 +62,16 @@ export const Contact = () => {
                       <Icon className="w-6 h-6 text-primary-light dark:text-primary-dark" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-                      <p className="text-gray-900 dark:text-white font-medium">{text}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {label}
+                      </p>
+                      <p className="text-gray-900 dark:text-white font-medium">
+                        {text}
+                      </p>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {[
-                { href: "#", label: "Twitter" },
-                { href: "#", label: "LinkedIn" },
-                { href: "#", label: "GitHub" }
-              ].map(({ href, label }, index) => (
-                <motion.a
-                  key={index}
-                  href={href}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <ExternalLink className="w-5 h-5 text-primary-light dark:text-primary-dark" />
-                  <span className="sr-only">{label}</span>
-                </motion.a>
-              ))}
             </div>
           </motion.div>
 
