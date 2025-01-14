@@ -42,7 +42,7 @@ app.use("/api/skills", skillRoutes);
 app.use(errorHandler);
 
 app.get("/", (req, res) => {
-  return <h1>Working file backend</h1>;
+  res.send("<h1>Working file backend</h1>");
 });
 
 app.listen(PORT, () => {
