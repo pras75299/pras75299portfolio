@@ -41,6 +41,10 @@ app.use("/api/skills", skillRoutes);
 // Error handling
 app.use(errorHandler);
 
+app.get("/", (req, res) => {
+  return <h1>Working file backend</h1>;
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
