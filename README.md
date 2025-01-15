@@ -61,9 +61,3 @@ Start the server
 ## Support
 
 For support, email prashantsingh11294@gmail.com
-
-## Tech Stack
-
-**Froentend:** React, Vite, TailwindCSS
-
-**Server:** Node, Express, MongoDB
