@@ -23,8 +23,18 @@ connectDB();
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://codexprashantsingh.netlify.app/",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "https://codexprashantsingh.netlify.app",
+        "http://localhost:5173",
+      ];
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
   })
 );
