@@ -2,6 +2,9 @@
 
 This is the backend service for a personal portfolio website. It is built using **Node.js**,**MongoDB**, **Express**, **React**, **Framer Motion**, and **Tailwindcss** and provides APIs for managing portfolio data like projects, skills, experiences, and messages.
 
+**Backend URL**- https://pras75299portfolio.vercel.app/
+**Frontend URL**- https://pras75299portfolio-mg5w.vercel.app/
+
 ---
 
 ## Features
