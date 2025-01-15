@@ -21,24 +21,33 @@ connectDB();
 
 // Middleware
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/javascript");
+  next();
+});
+
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        "https://codexprashantsingh.netlify.app",
-        "http://localhost:5173",
-      ];
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: ["https://codexprashantsingh.netlify.app", "http://localhost:5173"],
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
+    exposedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(helmet());
+
+// Security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+      },
+    },
+  })
+);
 app.use(morgan("dev"));
 
 // Rate limiting
