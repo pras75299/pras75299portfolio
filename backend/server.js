@@ -19,43 +19,43 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader("Content-Type", "application/javascript");
-  next();
-});
-
-app.use(
-  cors({
-    origin: ["https://codexprashantsingh.netlify.app", "http://localhost:5173"],
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-    credentials: true,
-    exposedHeaders: ["Content-Type"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// Security headers
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        "style-src": ["'self'", "'unsafe-inline'"],
-      },
-    },
-  })
-);
-app.use(morgan("dev"));
-
-// Rate limiting
+// Rate limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
 });
+
+// Middleware
+app.use(express.json());
+app.use(
+  cors({
+    origin: ["https://codexprashantsingh.netlify.app", "http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(morgan("dev"));
 app.use(limiter);
+
+// Content-Type headers
+app.use((req, res, next) => {
+  if (
+    req.url.endsWith(".js") ||
+    req.url.endsWith(".tsx") ||
+    req.url.endsWith(".ts")
+  ) {
+    res.setHeader("Content-Type", "application/javascript");
+  }
+  next();
+});
 
 // Routes
 app.use("/api/projects", projectRoutes);
@@ -66,10 +66,17 @@ app.use("/api/skills", skillRoutes);
 // Error handling
 app.use(errorHandler);
 
+// Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.get("/", (req, res) => {
-  res.send("<h1>Working file backend</h1>");
+  res.send("Backend working fine");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;
