@@ -55,7 +55,9 @@ export const Skills = () => {
   useEffect(() => {
     const fetchTechnologies = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/skills/");
+        const response = await axios.get(
+          "https://pras75299portfolio.vercel.app/api/skills/"
+        );
         setTechnologies(response.data);
       } catch (error) {
         console.error("Error fetching skills:", error);

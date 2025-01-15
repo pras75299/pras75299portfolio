@@ -81,7 +81,7 @@ export const Experience = () => {
     const fetchExperiences = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/experiences"
+          "https://pras75299portfolio.vercel.app/api/experiences"
         );
         const data = response.data.map((exp: any) => ({
           ...exp,
