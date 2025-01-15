@@ -1,6 +1,6 @@
-# Portfolio Backend
+# Portfolio
 
-This is the backend service for a personal portfolio website. It is built using **Node.js**, **Express**, and **MongoDB** and provides APIs for managing portfolio data like projects, skills, experiences, and messages.
+This is the backend service for a personal portfolio website. It is built using **Node.js**,**MongoDB**, **Express**, **React**, **Framer Motion**, and **Tailwindcss** and provides APIs for managing portfolio data like projects, skills, experiences, and messages.
 
 ---
 
@@ -25,3 +25,45 @@ This is the backend service for a personal portfolio website. It is built using 
 - **Environment Variables:** dotenv
 
 ---
+
+## Screenshots
+
+![App Screenshot](./frontendimg.png)
+
+## Run Locally
+
+Clone the project
+
+```bash
+  git clone https://github.com/pras75299/pras75299portfolio.git
+```
+
+Go to the project directory
+
+```bash
+  cd backend
+  or
+  cd frontend
+```
+
+Install dependencies
+
+```bash
+  npm install
+```
+
+Start the server
+
+```bash
+  npm run dev
+```
+
+## Support
+
+For support, email prashantsingh11294@gmail.com
+
+## Tech Stack
+
+**Froentend:** React, Vite, TailwindCSS
+
+**Server:** Node, Express, MongoDB
