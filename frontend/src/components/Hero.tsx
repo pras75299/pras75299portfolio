@@ -1,9 +1,14 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Github, Linkedin, Mail, ChevronDown } from 'lucide-react';
-import { AnimatedBackground } from './AnimatedBackground';
+import React from "react";
+import { motion } from "framer-motion";
+import { Github, Linkedin, Mail, ChevronDown } from "lucide-react";
 
-const AnimatedCharacter = ({ character, index }: { character: string; index: number }) => {
+const AnimatedCharacter = ({
+  character,
+  index,
+}: {
+  character: string;
+  index: number;
+}) => {
   return (
     <motion.span
       initial={{ opacity: 0, y: 50 }}
@@ -42,7 +47,7 @@ const AnimatedName = ({ text }: { text: string }) => {
         }}
       />
       <span className="relative">
-        {text.split('').map((char, index) => (
+        {text.split("").map((char, index) => (
           <AnimatedCharacter key={index} character={char} index={index} />
         ))}
       </span>
@@ -50,9 +55,15 @@ const AnimatedName = ({ text }: { text: string }) => {
   );
 };
 
-const AnimatedText = ({ text, className = "" }: { text: string; className?: string }) => {
+const AnimatedText = ({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) => {
   const words = text.split(" ");
-  
+
   const container = {
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
@@ -104,23 +115,24 @@ const AnimatedText = ({ text, className = "" }: { text: string; className?: stri
 
 export const Hero = () => {
   const scrollToProjects = () => {
-    const projectsSection = document.getElementById('projects');
+    const projectsSection = document.getElementById("projects");
     if (projectsSection) {
-      projectsSection.scrollIntoView({ behavior: 'smooth' });
+      projectsSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center p-8 overflow-hidden">
-      <AnimatedBackground />
-      
+    <section
+      id="home"
+      className="relative min-h-screen flex items-center justify-center p-8 overflow-hidden"
+    >
       <div className="relative max-w-4xl mx-auto text-center z-10">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.div 
+          <motion.div
             className="text-5xl md:text-7xl font-bold mb-6 relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,21 +147,27 @@ export const Hero = () => {
               Hi, I'm
             </motion.span>
             <br />
-            <div className="flex justify-center items-center space-x-3 text-4xl md:text-6xl font-extrabold tracking-tight">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-3 text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-extrabold tracking-tight">
               <AnimatedName text="Prashant" />
               <AnimatedName text="Kumar" />
               <AnimatedName text="Singh" />
             </div>
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-4 space-y-2"
           >
-            <AnimatedText text="Frontend Development Enthusiast" className="text-xl md:text-2xl" />
-            <AnimatedText text="UI/UX Craftsman" className="text-xl md:text-2xl" />
+            <AnimatedText
+              text="Frontend Development Enthusiast"
+              className="text-xl md:text-2xl"
+            />
+            <AnimatedText
+              text="UI/UX Craftsman"
+              className="text-xl md:text-2xl"
+            />
           </motion.div>
 
           <motion.p
@@ -158,7 +176,8 @@ export const Hero = () => {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto"
           >
-            Crafting beautiful, responsive, and user-friendly web experiences with modern technologies
+            Crafting beautiful, responsive, and user-friendly web experiences
+            with modern technologies
           </motion.p>
 
           <motion.div
@@ -170,7 +189,7 @@ export const Hero = () => {
             {[
               { Icon: Github, href: "https://github.com" },
               { Icon: Linkedin, href: "https://linkedin.com" },
-              { Icon: Mail, href: "mailto:contact@example.com" }
+              { Icon: Mail, href: "mailto:contact@example.com" },
             ].map(({ Icon, href }, index) => (
               <motion.a
                 key={index}
