@@ -47,8 +47,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         damping: 30,
       }}
       className={`relative cursor-pointer group ${
-        active ? "w-[500px]" : "w-[280px]"
-      } h-[400px] rounded-3xl overflow-hidden shrink-0`}
+        active
+          ? "w-full md:w-[100%] lg:w-[500px]"
+          : "w-full md:w-[100%] lg:w-[280px]"
+      } h-[300px] md:h-[400px] rounded-3xl overflow-hidden shrink-0`}
       style={{
         transformStyle: "preserve-3d",
         transformOrigin: "center center",
@@ -62,17 +64,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
       />
 
-      <motion.div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span className="inline-block px-4 py-1 mb-4 text-sm font-medium text-white bg-white/20 rounded-full backdrop-blur-sm">
+      <motion.div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-4 md:p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <span className="inline-block px-3 py-1 mb-2 md:mb-4 text-xs md:text-sm font-medium text-white bg-white/20 rounded-full backdrop-blur-sm">
           {project.category}
         </span>
-        <h3 className="text-2xl font-bold text-white mb-6">{project.title}</h3>
+        <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6">
+          {project.title}
+        </h3>
 
-        <div className="flex flex-wrap justify-center gap-2 mb-6">
+        <div className="flex flex-wrap justify-center gap-2 mb-4 md:mb-6">
           {project.tech.map((tech, i) => (
             <span
               key={i}
-              className="px-3 py-1 text-sm text-white bg-white/20 rounded-full backdrop-blur-sm"
+              className="px-2 md:px-3 py-1 text-xs md:text-sm text-white bg-white/20 rounded-full backdrop-blur-sm"
             >
               {tech}
             </span>
@@ -86,19 +90,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             href={project.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 bg-white/10 rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors"
+            className="p-2 md:p-3 bg-white/10 rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors"
           >
-            <Github className="w-6 h-6 text-white" />
+            <Github className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </motion.a>
           <motion.a
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            href={ensureAbsoluteUrl(project.live)} // Ensure absolute URL for liveUrl
+            href={ensureAbsoluteUrl(project.live)}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 bg-white/10 rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors"
+            className="p-2 md:p-3 bg-white/10 rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors"
           >
-            <ExternalLink className="w-6 h-6 text-white" />
+            <ExternalLink className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </motion.a>
         </div>
       </motion.div>

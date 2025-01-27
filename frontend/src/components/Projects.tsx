@@ -95,22 +95,28 @@ export const Projects = () => {
 
         <div className="relative">
           <motion.div className="flex justify-center items-center min-h-[500px] perspective-1000 px-4">
-            <div className="relative flex justify-center items-center gap-4 max-w-full">
+            <div className="relative flex flex-col md:flex-row justify-center items-center gap-4 max-w-full w-full">
               {visibleProjects.map((project, index) => (
-                <ProjectCard
+                <div
                   key={index + Math.max(0, activeIndex - 2)}
-                  project={project}
-                  index={index}
-                  active={index + Math.max(0, activeIndex - 2) === activeIndex}
-                  onClick={() =>
-                    setActiveIndex(index + Math.max(0, activeIndex - 2))
-                  }
-                />
+                  className="w-full md:w-auto"
+                >
+                  <ProjectCard
+                    project={project}
+                    index={index}
+                    active={
+                      index + Math.max(0, activeIndex - 2) === activeIndex
+                    }
+                    onClick={() =>
+                      setActiveIndex(index + Math.max(0, activeIndex - 2))
+                    }
+                  />
+                </div>
               ))}
             </div>
           </motion.div>
 
-          <div className="flex justify-center mt-8 gap-2">
+          <div className="hidden md:flex justify-center mt-8 gap-2">
             {projects.map((_, index) => (
               <button
                 key={index}
