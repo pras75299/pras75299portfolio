@@ -17,9 +17,7 @@ export const Projects = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(
-          "https://pras75299portfolio.vercel.app/api/projects/"
-        );
+        const response = await axios.get("/api/projects");
         const mappedProjects = response.data.map(
           (project: {
             title: any;

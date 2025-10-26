@@ -80,9 +80,7 @@ export const Experience = () => {
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        const response = await axios.get(
-          "https://pras75299portfolio.vercel.app/api/experiences"
-        );
+        const response = await axios.get("/api/experiences");
         const data = response.data.map((exp: any) => ({
           ...exp,
           period: `${new Date(exp.startDate).toLocaleDateString("en-US", {
