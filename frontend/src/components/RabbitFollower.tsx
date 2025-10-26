@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 interface Position {
   x: number;
@@ -6,6 +7,7 @@ interface Position {
 }
 
 export const RabbitFollower = () => {
+  const { theme } = useTheme();
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [targetPosition, setTargetPosition] = useState<Position>({
     x: 0,
@@ -16,6 +18,9 @@ export const RabbitFollower = () => {
   const rabbitRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
   const randomOffsetRef = useRef<Position>({ x: 0, y: 0 });
+
+  // Set rabbit color based on theme
+  const rabbitColor = theme === "light" ? "#ffbcbc" : "#fff";
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -103,10 +108,10 @@ export const RabbitFollower = () => {
         }}
       >
         {/* Rabbit head */}
-        <circle cx="50" cy="35" r="18" fill="#fff" />
+        <circle cx="50" cy="35" r="18" fill={rabbitColor} />
 
         {/* Ears with bobbing animation */}
-        <ellipse cx="42" cy="18" rx="4" ry="11" fill="#fff">
+        <ellipse cx="42" cy="18" rx="4" ry="11" fill={rabbitColor}>
           {isMoving && (
             <animateTransform
               attributeName="transform"
@@ -129,7 +134,7 @@ export const RabbitFollower = () => {
           )}
         </ellipse>
 
-        <ellipse cx="58" cy="18" rx="4" ry="11" fill="#fff">
+        <ellipse cx="58" cy="18" rx="4" ry="11" fill={rabbitColor}>
           {isMoving && (
             <animateTransform
               attributeName="transform"
@@ -188,11 +193,11 @@ export const RabbitFollower = () => {
         </g>
 
         {/* Body */}
-        <ellipse cx="50" cy="65" rx="22" ry="16" fill="#fff" />
+        <ellipse cx="50" cy="65" rx="22" ry="16" fill={rabbitColor} />
 
         {/* Front left leg */}
         <g>
-          <ellipse cx="40" cy="70" rx="5" ry="12" fill="#fff">
+          <ellipse cx="40" cy="70" rx="5" ry="12" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -204,7 +209,7 @@ export const RabbitFollower = () => {
             )}
           </ellipse>
           {/* Paw */}
-          <ellipse cx="40" cy="78" rx="4" ry="2.5" fill="#fff">
+          <ellipse cx="40" cy="78" rx="4" ry="2.5" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -219,7 +224,7 @@ export const RabbitFollower = () => {
 
         {/* Front right leg */}
         <g>
-          <ellipse cx="60" cy="70" rx="5" ry="12" fill="#fff">
+          <ellipse cx="60" cy="70" rx="5" ry="12" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -231,7 +236,7 @@ export const RabbitFollower = () => {
             )}
           </ellipse>
           {/* Paw */}
-          <ellipse cx="60" cy="78" rx="4" ry="2.5" fill="#fff">
+          <ellipse cx="60" cy="78" rx="4" ry="2.5" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -246,7 +251,7 @@ export const RabbitFollower = () => {
 
         {/* Back left leg */}
         <g>
-          <ellipse cx="45" cy="77" rx="5" ry="14" fill="#fff">
+          <ellipse cx="45" cy="77" rx="5" ry="14" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -259,7 +264,7 @@ export const RabbitFollower = () => {
             )}
           </ellipse>
           {/* Paw */}
-          <ellipse cx="45" cy="86" rx="4" ry="2.5" fill="#fff">
+          <ellipse cx="45" cy="86" rx="4" ry="2.5" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -275,7 +280,7 @@ export const RabbitFollower = () => {
 
         {/* Back right leg */}
         <g>
-          <ellipse cx="55" cy="77" rx="5" ry="14" fill="#fff">
+          <ellipse cx="55" cy="77" rx="5" ry="14" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
@@ -288,7 +293,7 @@ export const RabbitFollower = () => {
             )}
           </ellipse>
           {/* Paw */}
-          <ellipse cx="55" cy="86" rx="4" ry="2.5" fill="#fff">
+          <ellipse cx="55" cy="86" rx="4" ry="2.5" fill={rabbitColor}>
             {isMoving && (
               <animateTransform
                 attributeName="transform"
