@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Briefcase, Calendar } from "lucide-react";
 import axios from "axios";
+import { apiClient } from "../utils/api";
 
 interface ExperienceItem {
   title: string;
@@ -80,7 +81,7 @@ export const Experience = () => {
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        const response = await axios.get("/api/experiences");
+        const response = await axios.get(apiClient.experiences);
         const data = response.data.map((exp: any) => ({
           ...exp,
           period: `${new Date(exp.startDate).toLocaleDateString("en-US", {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import axios from "axios";
+import { apiClient } from "../utils/api";
 interface Technology {
   name: string;
   icon: string;
@@ -55,7 +56,7 @@ export const Skills = () => {
   useEffect(() => {
     const fetchTechnologies = async () => {
       try {
-        const response = await axios.get("/api/skills/");
+        const response = await axios.get(apiClient.skills);
         setTechnologies(response.data);
       } catch (error) {
         console.error("Error fetching skills:", error);

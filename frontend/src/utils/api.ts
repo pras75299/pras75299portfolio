@@ -17,6 +17,13 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// Log the API base URL for debugging
+console.log('🔧 API Configuration:', {
+  isProduction: import.meta.env.PROD,
+  baseUrl: API_BASE_URL,
+  environment: import.meta.env.MODE
+});
+
 export const apiClient = {
   projects: `${API_BASE_URL}/api/projects`,
   skills: `${API_BASE_URL}/api/skills`,
