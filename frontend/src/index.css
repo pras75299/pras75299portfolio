@@ -9,3 +9,16 @@
 .customclassfortitle {
   line-height: 80px !important;
 }
+
+/* View Transitions API Styles for Theme Toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 500ms;
+  animation-timing-function: ease-in-out;
+}
+
+/* Ensure smooth transition between themes */
+::view-transition-group(root) {
+  animation-duration: 500ms;
+  animation-timing-function: ease-in-out;
+}
