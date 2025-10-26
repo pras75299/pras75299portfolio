@@ -4,7 +4,7 @@ const getApiBaseUrl = () => {
   if (import.meta.env.PROD) {
     // Try different possible backend URLs
     const possibleUrls = [
-      'https://pras75299portfolio.vercel.app/',  // Your Vercel backend
+      'https://pras75299portfolio.vercel.app',  // Your Vercel backend
     ];
     
     // For now, return the first URL, but you should update this with your actual backend URL
