@@ -10,6 +10,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import experienceRoutes from "./routes/experienceRoutes.js";
 import skillRoutes from "./routes/skillRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 config();
 
@@ -62,6 +63,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/experiences", experienceRoutes);
 app.use("/api/skills", skillRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Error handling
 app.use(errorHandler);
