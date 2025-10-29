@@ -8,8 +8,6 @@ interface Position {
 export const RabbitFollower = () => {
   const uniqueId = useId();
   const clipPathId = `rabbit-body-clip-${uniqueId.replace(/:/g, "")}`;
-  const leftEarClipId = `${clipPathId}-left-ear`;
-  const rightEarClipId = `${clipPathId}-right-ear`;
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [targetPosition, setTargetPosition] = useState<Position>({
     x: 0,
@@ -21,22 +19,19 @@ export const RabbitFollower = () => {
   const animationFrameRef = useRef<number>();
   const randomOffsetRef = useRef<Position>({ x: 0, y: 0 });
 
-  const outlineColor = "#4f52d4";
-  const leftFill = "#6f7dff";
-  const rightFill = "#f6f7ff";
-  const earInner = "#dbe4ff";
-  const earHighlight = "#ffffff";
-  const noseColor = "#ff8faf";
-  const eyeColor = "#7168ff";
-  const cheekColor = "#8592ff";
-  const noseHighlight = "#ffe4ef";
+  const outlineColor = "#1f3c88";
+  const bodyPrimary = "#ffffff";
+  const bodySecondary = "#9fbaff";
+  const earInner = "#dbe6ff";
+  const noseColor = "#ff718b";
+  const eyeColor = "#7358ff";
 
   const bodyPath =
-    "M82 32 C70 30 60 36 54 46 C48 54 40 60 32 68 C20 80 14 98 20 114 C12 122 8 136 14 148 C18 156 28 166 38 168 A20 20 0 0 0 56 158 A16 16 0 0 0 68 166 A16 16 0 0 0 86 170 A20 20 0 0 0 108 160 A20 20 0 0 0 122 156 C136 152 134 138 134 122 C144 106 140 86 126 72 C116 62 106 54 100 44 C94 34 88 32 82 32 Z";
-  const leftEarPath =
-    "M64 12 C50 4 34 12 32 28 C30 46 42 68 56 78 C70 66 76 48 74 32 C72 22 70 16 64 12 Z";
-  const rightEarPath =
-    "M96 12 C110 4 126 12 128 28 C130 46 118 68 104 78 C90 66 84 48 86 32 C88 22 90 16 96 12 Z";
+    "M36 78c0-22 19-40 43-40s43 18 43 40-19 40-43 40H60c-15 0-27-12-27-27 0-5 1-10 3-13Z";
+  const frontEarPath =
+    "M52 14c-5 0-9 4-9 10 0 13 7 30 15 39 8-9 15-26 15-39 0-6-4-10-9-10Z";
+  const backEarPath =
+    "M68 10c-5 0-9 4-9 9 0 12 6 28 13 37 7-9 13-25 13-37 0-5-4-9-9-9Z";
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -113,137 +108,193 @@ export const RabbitFollower = () => {
     >
       {/* Rabbit Icon using SVG with running animation */}
       <svg
-        width="90"
-        height="90"
-        viewBox="0 0 160 180"
+        width="70"
+        height="70"
+        viewBox="0 0 140 140"
         className={`transition-transform duration-200 ${
           getDirection() === "right" ? "" : "scale-x-[-1]"
         }`}
         style={{
-          filter: "drop-shadow(0px 12px 16px rgba(0, 0, 0, 0.35))",
+          filter: "drop-shadow(3px 4px 6px rgba(0,0,0,0.3))",
         }}
       >
         <defs>
           <clipPath id={clipPathId}>
             <path d={bodyPath} />
           </clipPath>
-          <clipPath id={leftEarClipId}>
-            <path d={leftEarPath} />
-          </clipPath>
-          <clipPath id={rightEarClipId}>
-            <path d={rightEarPath} />
-          </clipPath>
         </defs>
 
-        {/* Ears */}
-        <g>
-          <g>
-            <path
-              d={leftEarPath}
-              fill={leftFill}
-              stroke={outlineColor}
-              strokeWidth="8"
-              strokeLinejoin="round"
+        {/* Back ear */}
+        <path
+          d={backEarPath}
+          fill={bodySecondary}
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinejoin="round"
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
+              repeatCount="indefinite"
             />
-            <g clipPath={`url(#${leftEarClipId})`}>
-              <ellipse cx="50" cy="32" rx="10" ry="18" fill={earInner} opacity={0.85} />
-              <ellipse
-                cx="54"
-                cy="22"
-                rx="6"
-                ry="10"
-                fill={earHighlight}
-                opacity={0.8}
-              />
-            </g>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0 0; -1.5 3; 0 0"
-                dur="0.45s"
-                repeatCount="indefinite"
-              />
-            )}
-          </g>
+          )}
+        </path>
 
-          <g>
-            <path
-              d={rightEarPath}
-              fill={rightFill}
-              stroke={outlineColor}
-              strokeWidth="8"
-              strokeLinejoin="round"
+        {/* Front ear */}
+        <path
+          d={frontEarPath}
+          fill={bodyPrimary}
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinejoin="round"
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
+              begin="0.1s"
+              repeatCount="indefinite"
             />
-            <g clipPath={`url(#${rightEarClipId})`}>
-              <ellipse cx="110" cy="32" rx="10" ry="18" fill={earInner} opacity={0.65} />
-              <ellipse
-                cx="106"
-                cy="20"
-                rx="6"
-                ry="10"
-                fill={earHighlight}
-                opacity={0.75}
-              />
-            </g>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0 0; 1.5 3; 0 0"
-                dur="0.45s"
-                begin="0.1s"
-                repeatCount="indefinite"
-              />
-            )}
-          </g>
-        </g>
+          )}
+        </path>
+        <path
+          d="M58 20c-3 0-5 2-5 6 0 9 5 20 9 26 4-6 9-17 9-26 0-4-2-6-5-6Z"
+          fill={earInner}
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
+              begin="0.1s"
+              repeatCount="indefinite"
+            />
+          )}
+        </path>
 
         {/* Body */}
-        <g clipPath={`url(#${clipPathId})`}>
-          <path d={bodyPath} fill={rightFill} />
-          <rect x="0" y="0" width="80" height="180" fill={leftFill} />
-          <circle cx="42" cy="138" r="22" fill="#6372ff" opacity={0.85} />
-          <ellipse cx="66" cy="150" rx="16" ry="20" fill="#6d7aff" opacity={0.9} />
-          <ellipse cx="112" cy="150" rx="13" ry="18" fill={rightFill} />
-          <ellipse cx="128" cy="144" rx="11" ry="16" fill={rightFill} />
+        <g>
+          <path d={bodyPath} fill={bodyPrimary} stroke="none" />
+          <rect
+            x="60"
+            y="32"
+            width="70"
+            height="90"
+            fill={bodySecondary}
+            clipPath={`url(#${clipPathId})`}
+            style={{ transition: "fill 0.3s ease" }}
+          />
+          <path
+            d={bodyPath}
+            fill="none"
+            stroke={outlineColor}
+            strokeWidth="6"
+            strokeLinejoin="round"
+          />
         </g>
+
+        {/* Tail */}
+        <g>
+          <circle
+            cx="120"
+            cy="96"
+            r="12"
+            fill={bodySecondary}
+            stroke={outlineColor}
+            strokeWidth="6"
+          />
+        </g>
+
+        {/* Head */}
+        <g>
+          <circle
+            cx="58"
+            cy="64"
+            r="22"
+            fill={bodyPrimary}
+            stroke={outlineColor}
+            strokeWidth="6"
+          />
+          <path
+            d="M65 60c6-5 14-8 22-8"
+            stroke={outlineColor}
+            strokeWidth="6"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </g>
+
+        {/* Eye */}
+        <g>
+          <circle cx="70" cy="62" r="4" fill={eyeColor} />
+          <circle cx="71.5" cy="60.5" r="1.5" fill="#fff" />
+        </g>
+
+        {/* Nose */}
+        <circle cx="78" cy="72" r="3" fill={noseColor} />
+
+        {/* Mouth */}
         <path
-          d={bodyPath}
-          fill="none"
+          d="M74 78c2 3 6 4 10 3"
           stroke={outlineColor}
-          strokeWidth="8"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M80 56 L80 150"
-          stroke={outlineColor}
-          strokeWidth="6"
+          strokeWidth="4"
           strokeLinecap="round"
+          fill="none"
         />
 
-        {/* Face details */}
-        <ellipse cx="68" cy="108" rx="12" ry="14" fill={cheekColor} opacity={0.72} />
-        <circle cx="80" cy="108" r="5" fill={noseColor} />
-        <circle cx="82" cy="106" r="2.4" fill={noseHighlight} />
+        {/* Chest curve */}
         <path
-          d="M94 112 Q104 122 118 114"
+          d="M52 84c-8 4-12 10-12 18"
           stroke={outlineColor}
           strokeWidth="6"
           strokeLinecap="round"
           fill="none"
         />
+
+        {/* Front foot */}
         <path
-          d="M94 104 Q102 96 112 100"
-          stroke={earHighlight}
+          d="M44 108c10-10 22-16 36-16"
+          stroke={outlineColor}
           strokeWidth="6"
           strokeLinecap="round"
           fill="none"
-          opacity={0.55}
-        />
-        <circle cx="106" cy="100" r="6" fill={eyeColor} />
-        <circle cx="108" cy="98" r="2" fill={earHighlight} />
-        <circle cx="88" cy="126" r="4" fill={noseColor} opacity={0.5} />
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; -2 2; 0 0"
+              dur="0.4s"
+              repeatCount="indefinite"
+            />
+          )}
+        </path>
+
+        {/* Back leg */}
+        <path
+          d="M82 112c10 0 18-4 24-12"
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          fill="none"
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; 2 2; 0 0"
+              dur="0.4s"
+              begin="0.2s"
+              repeatCount="indefinite"
+            />
+          )}
+        </path>
       </svg>
     </div>
   );
