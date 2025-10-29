@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import { useTheme } from "../context/ThemeContext";
+import { useEffect, useState, useRef, useId } from "react";
 
 interface Position {
   x: number;
@@ -7,7 +6,8 @@ interface Position {
 }
 
 export const RabbitFollower = () => {
-  const { theme } = useTheme();
+  const uniqueId = useId();
+  const clipPathId = `rabbit-body-clip-${uniqueId.replace(/:/g, "")}`;
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [targetPosition, setTargetPosition] = useState<Position>({
     x: 0,
@@ -19,8 +19,19 @@ export const RabbitFollower = () => {
   const animationFrameRef = useRef<number>();
   const randomOffsetRef = useRef<Position>({ x: 0, y: 0 });
 
-  // Set rabbit color based on theme
-  const rabbitColor = theme === "light" ? "#ffbcbc" : "#fff";
+  const outlineColor = "#1f3c88";
+  const bodyPrimary = "#ffffff";
+  const bodySecondary = "#9fbaff";
+  const earInner = "#dbe6ff";
+  const noseColor = "#ff718b";
+  const eyeColor = "#7358ff";
+
+  const bodyPath =
+    "M36 78c0-22 19-40 43-40s43 18 43 40-19 40-43 40H60c-15 0-27-12-27-27 0-5 1-10 3-13Z";
+  const frontEarPath =
+    "M52 14c-5 0-9 4-9 10 0 13 7 30 15 39 8-9 15-26 15-39 0-6-4-10-9-10Z";
+  const backEarPath =
+    "M68 10c-5 0-9 4-9 9 0 12 6 28 13 37 7-9 13-25 13-37 0-5-4-9-9-9Z";
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -97,215 +108,193 @@ export const RabbitFollower = () => {
     >
       {/* Rabbit Icon using SVG with running animation */}
       <svg
-        width="50"
-        height="50"
-        viewBox="0 0 100 100"
+        width="70"
+        height="70"
+        viewBox="0 0 140 140"
         className={`transition-transform duration-200 ${
           getDirection() === "right" ? "" : "scale-x-[-1]"
         }`}
         style={{
-          filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
+          filter: "drop-shadow(3px 4px 6px rgba(0,0,0,0.3))",
         }}
       >
-        {/* Rabbit head */}
-        <circle cx="50" cy="35" r="18" fill={rabbitColor} />
+        <defs>
+          <clipPath id={clipPathId}>
+            <path d={bodyPath} />
+          </clipPath>
+        </defs>
 
-        {/* Ears with bobbing animation */}
-        <ellipse cx="42" cy="18" rx="4" ry="11" fill={rabbitColor}>
+        {/* Back ear */}
+        <path
+          d={backEarPath}
+          fill={bodySecondary}
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinejoin="round"
+        >
           {isMoving && (
             <animateTransform
               attributeName="transform"
               type="translate"
-              values="0,0; 0,3; 0,0"
-              dur="0.35s"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
               repeatCount="indefinite"
             />
           )}
-        </ellipse>
-        <ellipse cx="42" cy="20" rx="2.5" ry="7" fill="#ffe0f0">
+        </path>
+
+        {/* Front ear */}
+        <path
+          d={frontEarPath}
+          fill={bodyPrimary}
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinejoin="round"
+        >
           {isMoving && (
             <animateTransform
               attributeName="transform"
               type="translate"
-              values="0,0; 0,3; 0,0"
-              dur="0.35s"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
+              begin="0.1s"
               repeatCount="indefinite"
             />
           )}
-        </ellipse>
-
-        <ellipse cx="58" cy="18" rx="4" ry="11" fill={rabbitColor}>
+        </path>
+        <path
+          d="M58 20c-3 0-5 2-5 6 0 9 5 20 9 26 4-6 9-17 9-26 0-4-2-6-5-6Z"
+          fill={earInner}
+        >
           {isMoving && (
             <animateTransform
               attributeName="transform"
               type="translate"
-              values="0,0; 0,3; 0,0"
-              dur="0.35s"
-              begin="0.18s"
+              values="0 0; 0 3; 0 0"
+              dur="0.4s"
+              begin="0.1s"
               repeatCount="indefinite"
             />
           )}
-        </ellipse>
-        <ellipse cx="58" cy="20" rx="2.5" ry="7" fill="#ffe0f0">
-          {isMoving && (
-            <animateTransform
-              attributeName="transform"
-              type="translate"
-              values="0,0; 0,3; 0,0"
-              dur="0.35s"
-              begin="0.18s"
-              repeatCount="indefinite"
-            />
-          )}
-        </ellipse>
-
-        {/* Eyes */}
-        <circle cx="46" cy="34" r="3" fill="#000" />
-        <circle cx="54" cy="34" r="3" fill="#000" />
-        <circle cx="47" cy="33" r="1" fill="#fff" />
-        <circle cx="55" cy="33" r="1" fill="#fff" />
-
-        {/* Nose */}
-        <ellipse cx="50" cy="39" rx="1.5" ry="1" fill="#000" />
-
-        {/* Mouth - neutral when moving, smiling when stopped with smooth transition */}
-        <g>
-          <path
-            d={isMoving ? "M 50 40 Q 48 42 46 41" : "M 50 41 Q 48 45 44 43"}
-            stroke="#000"
-            strokeWidth={isMoving ? "1" : "1.5"}
-            strokeLinecap="round"
-            fill="none"
-            style={{
-              transition: "all 0.4s ease-in-out",
-            }}
-          />
-          <path
-            d={isMoving ? "M 50 40 Q 52 42 54 41" : "M 50 41 Q 52 45 56 43"}
-            stroke="#000"
-            strokeWidth={isMoving ? "1" : "1.5"}
-            strokeLinecap="round"
-            fill="none"
-            style={{
-              transition: "all 0.4s ease-in-out",
-            }}
-          />
-        </g>
+        </path>
 
         {/* Body */}
-        <ellipse cx="50" cy="65" rx="22" ry="16" fill={rabbitColor} />
-
-        {/* Front left leg */}
         <g>
-          <ellipse cx="40" cy="70" rx="5" ry="12" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,0; -3,5; 0,0"
-                dur="0.35s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
-          {/* Paw */}
-          <ellipse cx="40" cy="78" rx="4" ry="2.5" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,0; -3,5; 0,0"
-                dur="0.35s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
+          <path d={bodyPath} fill={bodyPrimary} stroke="none" />
+          <rect
+            x="60"
+            y="32"
+            width="70"
+            height="90"
+            fill={bodySecondary}
+            clipPath={`url(#${clipPathId})`}
+            style={{ transition: "fill 0.3s ease" }}
+          />
+          <path
+            d={bodyPath}
+            fill="none"
+            stroke={outlineColor}
+            strokeWidth="6"
+            strokeLinejoin="round"
+          />
         </g>
 
-        {/* Front right leg */}
+        {/* Tail */}
         <g>
-          <ellipse cx="60" cy="70" rx="5" ry="12" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,5; -3,0; 0,5"
-                dur="0.35s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
-          {/* Paw */}
-          <ellipse cx="60" cy="78" rx="4" ry="2.5" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,5; -3,0; 0,5"
-                dur="0.35s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
+          <circle
+            cx="120"
+            cy="96"
+            r="12"
+            fill={bodySecondary}
+            stroke={outlineColor}
+            strokeWidth="6"
+          />
         </g>
 
-        {/* Back left leg */}
+        {/* Head */}
         <g>
-          <ellipse cx="45" cy="77" rx="5" ry="14" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,0; 3,5; 0,0"
-                dur="0.35s"
-                begin="0.18s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
-          {/* Paw */}
-          <ellipse cx="45" cy="86" rx="4" ry="2.5" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,0; 3,5; 0,0"
-                dur="0.35s"
-                begin="0.18s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
+          <circle
+            cx="58"
+            cy="64"
+            r="22"
+            fill={bodyPrimary}
+            stroke={outlineColor}
+            strokeWidth="6"
+          />
+          <path
+            d="M65 60c6-5 14-8 22-8"
+            stroke={outlineColor}
+            strokeWidth="6"
+            strokeLinecap="round"
+            fill="none"
+          />
         </g>
 
-        {/* Back right leg */}
+        {/* Eye */}
         <g>
-          <ellipse cx="55" cy="77" rx="5" ry="14" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,5; 3,0; 0,5"
-                dur="0.35s"
-                begin="0.18s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
-          {/* Paw */}
-          <ellipse cx="55" cy="86" rx="4" ry="2.5" fill={rabbitColor}>
-            {isMoving && (
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0,5; 3,0; 0,5"
-                dur="0.35s"
-                begin="0.18s"
-                repeatCount="indefinite"
-              />
-            )}
-          </ellipse>
+          <circle cx="70" cy="62" r="4" fill={eyeColor} />
+          <circle cx="71.5" cy="60.5" r="1.5" fill="#fff" />
         </g>
+
+        {/* Nose */}
+        <circle cx="78" cy="72" r="3" fill={noseColor} />
+
+        {/* Mouth */}
+        <path
+          d="M74 78c2 3 6 4 10 3"
+          stroke={outlineColor}
+          strokeWidth="4"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Chest curve */}
+        <path
+          d="M52 84c-8 4-12 10-12 18"
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Front foot */}
+        <path
+          d="M44 108c10-10 22-16 36-16"
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          fill="none"
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; -2 2; 0 0"
+              dur="0.4s"
+              repeatCount="indefinite"
+            />
+          )}
+        </path>
+
+        {/* Back leg */}
+        <path
+          d="M82 112c10 0 18-4 24-12"
+          stroke={outlineColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          fill="none"
+        >
+          {isMoving && (
+            <animateTransform
+              attributeName="transform"
+              type="translate"
+              values="0 0; 2 2; 0 0"
+              dur="0.4s"
+              begin="0.2s"
+              repeatCount="indefinite"
+            />
+          )}
+        </path>
       </svg>
     </div>
   );
