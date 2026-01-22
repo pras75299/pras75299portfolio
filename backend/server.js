@@ -17,8 +17,14 @@ config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (handle errors gracefully for serverless)
+connectDB().catch((error) => {
+  console.error("MongoDB connection error:", error);
+  // Don't exit in serverless environment
+  if (process.env.VERCEL !== "1") {
+    process.exit(1);
+  }
+});
 
 // Rate limiter
 const limiter = rateLimit({
@@ -30,7 +36,11 @@ const limiter = rateLimit({
 app.use(express.json());
 app.use(
   cors({
-    origin: ["https://codexprashantsingh.netlify.app", "http://localhost:5173"],
+    origin: [
+      "https://codexprashantsingh.netlify.app",
+      "https://codexprashantsingh.vercel.app",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -65,9 +75,6 @@ app.use("/api/experiences", experienceRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/chat", chatRoutes);
 
-// Error handling
-app.use(errorHandler);
-
 // Health check route
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
@@ -77,8 +84,23 @@ app.get("/", (req, res) => {
   res.send("Backend working fine");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// 404 handler for undefined routes
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: "Route not found",
+    path: req.path,
+    method: req.method,
+  });
 });
+
+// Error handling (must be last)
+app.use(errorHandler);
+
+// Only start server if not in Vercel serverless environment
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
 export default app;
