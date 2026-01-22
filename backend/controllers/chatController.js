@@ -196,15 +196,31 @@ COMMON PORTFOLIO QUESTIONS YOU CAN ANSWER:
 // Chat endpoint
 export const chatWithAssistant = async (req, res) => {
   try {
+    // Debug logging
+    console.log("Chat request received:", {
+      body: req.body,
+      bodyType: typeof req.body,
+      bodyKeys: req.body ? Object.keys(req.body) : "no body",
+      headers: req.headers["content-type"],
+    });
+
+    // Check if body exists
+    if (!req.body || typeof req.body !== "object") {
+      return res.status(400).json({
+        error: "Request body is required and must be a JSON object",
+      });
+    }
+
     // Validate input
-    const { error } = validateChatMessage(req.body);
+    const { error, value } = validateChatMessage(req.body);
     if (error) {
+      console.log("Validation error:", error.details);
       return res.status(400).json({
         error: error.details[0].message,
       });
     }
 
-    const { message } = req.body;
+    const { message } = value;
 
     // Get portfolio data for context
     const portfolioData = await getPortfolioContext();

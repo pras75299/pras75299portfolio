@@ -59,9 +59,30 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(apiClient.chat, {
-        message: userMessage.text,
+      const messageText = userMessage.text.trim();
+      
+      if (!messageText) {
+        throw new Error("Message cannot be empty");
+      }
+
+      const requestBody = {
+        message: messageText,
+      };
+
+      console.log("Sending chat request:", {
+        url: apiClient.chat,
+        body: requestBody,
       });
+
+      const response = await axios.post(
+        apiClient.chat,
+        requestBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
