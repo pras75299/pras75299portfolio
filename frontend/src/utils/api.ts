@@ -1,20 +1,14 @@
 // API configuration for different environments
 const getApiBaseUrl = () => {
   // Check if we're in production using import.meta.env (Vite's environment variable)
-  if (import.meta.env.PROD) {
-    // Use environment variable if set, otherwise default to same domain
-    // For Vercel: Set VITE_API_BASE_URL in your Vercel project settings
-    // If frontend and backend are on the same Vercel project, use empty string (same domain)
-    // If they're separate, use the backend's full URL
-    const apiUrl = import.meta.env.VITE_API_BASE_URL;
-    
-    if (apiUrl) {
-      return apiUrl;
-    }
-    
-    // Default: assume same domain (for monorepo deployments)
-    // If backend is on a different domain, set VITE_API_BASE_URL in Vercel
-    return '';
+  // In production builds, import.meta.env.PROD is true
+  // Also check mode to be safe
+  const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
+  
+  if (isProduction) {
+    // Backend URL - explicitly set for production
+    // Backend is deployed at: https://pras75299portfolio.vercel.app
+    return 'https://pras75299portfolio.vercel.app';
   }
   
   // Development - use proxy (Vite will proxy /api/* to localhost:8080)
