@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, X, Minimize2, Maximize2 } from "lucide-react";
 import axios from "axios";
+import { apiClient } from "../utils/api";
 
 interface Message {
   id: string;
@@ -58,7 +59,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("/api/chat", {
+      const response = await axios.post(apiClient.chat, {
         message: userMessage.text,
       });
 
