@@ -6,6 +6,8 @@ import {
 
 const router = express.Router();
 
+router.get("/", getChatHistory);
+
 // POST /api/chat - Send message to AI assistant
 router.post("/", chatWithAssistant);
 
