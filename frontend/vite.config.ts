@@ -5,12 +5,5 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'https://pras75299portfolio.vercel.app',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
   },
 });
