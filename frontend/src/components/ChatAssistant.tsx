@@ -129,15 +129,15 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <div
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300 ${
+        className={`bg-background rounded-lg shadow-2xl border border-border transition-all duration-300 ${
           isMinimized ? "w-80 h-16" : "w-96 h-[513px]"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-primary text-primary-foreground rounded-t-lg">
           <div className="flex items-center space-x-2">
             <Bot className="w-5 h-5" />
-            <h3 className="font-semibold">Personal Assistant</h3>
+            <h3 className="font-semibold font-display tracking-tight">Personal Assistant</h3>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -178,10 +178,10 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
                     }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                         message.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
                       }`}
                     >
                       {message.sender === "user" ? (
@@ -193,18 +193,18 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
                     <div
                       className={`rounded-lg px-3 py-2 ${
                         message.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">
+                      <p className="text-sm whitespace-pre-wrap font-sans">
                         {message.text}
                       </p>
                       <p
                         className={`text-xs mt-1 ${
                           message.sender === "user"
-                            ? "text-blue-100"
-                            : "text-gray-500 dark:text-gray-400"
+                            ? "text-primary-foreground/70"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {formatTime(message.timestamp)}
@@ -217,18 +217,18 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="flex items-start space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                      <Bot className="w-4 h-4 text-secondary-foreground" />
                     </div>
-                    <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="bg-secondary rounded-lg px-3 py-2">
+                      <div className="flex space-x-1 py-1">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                         <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                           style={{ animationDelay: "0.1s" }}
                         ></div>
                         <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                           style={{ animationDelay: "0.2s" }}
                         ></div>
                       </div>
@@ -241,7 +241,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-t border-border">
               <div className="flex space-x-2">
                 <input
                   ref={inputRef}
@@ -249,14 +249,14 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask about experience, projects, or skills..."
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Ask about experience..."
+                  className="flex-1 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground placeholder-muted-foreground tracking-tight text-sm"
                   disabled={isLoading}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center"
+                  className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground rounded-lg transition-colors flex items-center justify-center shrink-0"
                 >
                   <Send className="w-4 h-4" />
                 </button>
