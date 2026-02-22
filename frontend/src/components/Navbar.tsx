@@ -6,8 +6,8 @@ import { MobileMenu } from "./MobileMenu";
 
 const navItems = [
   { name: "Home", href: "#home" },
-  { name: "Projects", href: "#projects" },
   { name: "Experience", href: "#experience" },
+  { name: "Projects", href: "#projects" },
   { name: "Skills", href: "#skills" },
 ];
 
@@ -18,10 +18,10 @@ export const Navbar = () => {
 
   const handleScroll = () => {
     const sections = document.querySelectorAll("section");
-    const scrollPosition = window.scrollY + window.innerHeight / 2; // Use midpoint of viewport
+    const scrollPosition = window.scrollY + window.innerHeight / 2;
     setIsScrolled(window.scrollY > 20);
 
-    let currentSection = "Home"; // Default section
+    let currentSection = "Home";
 
     sections.forEach((section) => {
       const sectionTop = section.offsetTop;
@@ -48,72 +48,66 @@ export const Navbar = () => {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 flex justify-center z-50 px-4 py-6">
-        <motion.nav
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="w-full max-w-2xl mx-auto"
-        >
-          <motion.div
-            className={`flex items-center justify-between backdrop-blur-lg rounded-full px-6 py-3 transition-all duration-300 ${
-              isScrolled
-                ? "bg-white/90 dark:bg-gray-900/90 shadow-lg dark:shadow-none"
-                : "bg-white/50 dark:bg-gray-900/50"
-            }`}
-            layoutId="navbar"
-            layout
-          >
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
-              {navItems.map((item) => (
-                <motion.a
-                  key={item.name}
-                  href={item.href}
-                  className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    activeSection === item.name
-                      ? "text-gray-900 dark:text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const element = document.querySelector(item.href);
-                    if (element) {
-                      element.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                >
-                  {activeSection === item.name && (
-                    <motion.div
-                      layoutId="active"
-                      className="absolute inset-0 bg-primary-light/20 dark:bg-primary-dark/20 rounded-full"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 380,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.name}</span>
-                </motion.a>
-              ))}
-            </div>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+          isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border" : "bg-transparent"
+        }`}
+      >
+        <div className="max-w-3xl mx-auto px-6 h-20 flex items-center justify-between">
+          <a href="#home" className="text-xl font-display tracking-tight font-bold">
+            PKS.
+          </a>
 
-            {/* Mobile Menu Button */}
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="relative text-sm font-medium transition-colors hover:text-foreground text-muted-foreground"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.querySelector(item.href);
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                {item.name}
+                {activeSection === item.name && (
+                  <motion.div
+                    layoutId="active-nav"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                    initial={false}
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 30,
+                    }}
+                  />
+                )}
+              </a>
+            ))}
+            
+            <ThemeToggle />
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-4">
+            <ThemeToggle />
             <button
-              className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+              className="p-2 text-foreground"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu className="w-6 h-6" />
             </button>
+          </div>
+        </div>
+      </motion.header>
 
-            <ThemeToggle />
-          </motion.div>
-        </motion.nav>
-      </div>
-
-      {/* Mobile Menu */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
