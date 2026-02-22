@@ -1,101 +1,73 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ParticleBackground } from "./ParticleBackground";
-import { AnimatedTitle } from "./AnimatedTitle";
-import { FloatingIcons } from "./FloatingIcons";
-import { SocialLinks } from "./SocialLinks";
-import { ScrollIndicator } from "./ScrollIndicator";
+import { Github, Linkedin, Twitter, ArrowRight } from "lucide-react";
 
 export const Hero = () => {
-  const scrollToProjects = () => {
-    const projectsSection = document.getElementById("projects");
-    if (projectsSection) {
-      projectsSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const roleVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut",
-      },
-    },
-  };
-
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center p-8 overflow-hidden"
+      className="min-h-screen flex items-center justify-center pt-20 pb-16 px-6"
     >
-      <ParticleBackground />
-      <FloatingIcons />
-
-      <div className="relative max-w-4xl mx-auto text-center z-10">
+      <div className="max-w-3xl mx-auto w-full space-y-8 relative z-10">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="space-y-4"
         >
-          <motion.div className="mb-6">
-            <motion.span
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-block mb-4 text-2xl md:text-3xl text-gray-600 dark:text-gray-300"
-            >
-              Hi, I'm
-            </motion.span>
+          <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-mono mb-4">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span>Available for work</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter">
+            Prashant <br />
+            <span className="text-muted-foreground">Kumar Singh</span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl font-display mt-6 leading-relaxed">
+            Frontend Development Enthusiast crafting beautiful, responsive, and user-friendly web experiences with modern technologies.
+          </p>
+        </motion.div>
 
-            <div className="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-3 text-4xl md:text-6xl font-extrabold tracking-tight">
-              <AnimatedTitle
-                text="Prashant Kumar Singh"
-                className="bg-gradient-to-r from-primary-light to-blue-600 dark:from-primary-dark dark:to-blue-400 bg-clip-text text-transparent customclassfortitle"
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={roleVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-4 mb-8"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex flex-wrap items-center gap-4 pt-4"
+        >
+          <a
+            href="https://github.com/pras75299"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors group px-4 py-2 bg-secondary/50 rounded-lg hover:bg-secondary"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="text-xl md:text-2xl font-medium bg-gradient-to-r from-primary-light to-blue-600 dark:from-primary-dark dark:to-blue-400 bg-clip-text text-transparent"
-            >
-              Frontend Development Enthusiast
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              className="text-xl md:text-2xl font-medium bg-gradient-to-r from-blue-600 to-primary-light dark:from-blue-400 dark:to-primary-dark bg-clip-text text-transparent"
-            >
-              UI/UX Craftsman
-            </motion.div>
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1 }}
-            className="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto"
+            <Github className="w-5 h-5" />
+            <span>GitHub</span>
+          </a>
+          
+          <a
+            href="https://www.linkedin.com/in/wordsprashant/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors group px-4 py-2 bg-secondary/50 rounded-lg hover:bg-secondary"
           >
-            Crafting beautiful, responsive, and user-friendly web experiences
-            with modern technologies
-          </motion.p>
-
-          <SocialLinks />
-          <ScrollIndicator onClick={scrollToProjects} />
+            <Linkedin className="w-5 h-5" />
+            <span>LinkedIn</span>
+          </a>
+          
+          <a
+            href="https://x.com/asNobodyLikes"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors group px-4 py-2 bg-secondary/50 rounded-lg hover:bg-secondary"
+          >
+            <Twitter className="w-5 h-5" />
+            <span>Twitter</span>
+          </a>
         </motion.div>
       </div>
     </section>
   );
 };
+

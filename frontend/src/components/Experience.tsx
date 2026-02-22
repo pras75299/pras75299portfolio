@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-import { Briefcase, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { apiClient } from "../utils/api";
 
@@ -13,59 +11,70 @@ interface ExperienceItem {
   technologies: string[];
 }
 
-const ExperienceCard: React.FC<{
-  experience: ExperienceItem;
-  index: number;
-}> = ({ experience, index }) => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
+const ExperienceItemComponent = ({ exp, index }: { exp: ExperienceItem; index: number }) => {
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.div
-      ref={ref}
       initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.2 }}
-      className="relative pl-8 pb-8"
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="relative pl-8 py-6 group cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="absolute left-[7px] top-2 bottom-0 w-[2px] bg-gray-200 dark:bg-gray-700" />
-      <div className="absolute left-0 top-2 w-4 h-4 rounded-full bg-primary-light dark:bg-primary-dark" />
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            {experience.title}
-          </h3>
-          <div className="flex items-center text-gray-500 dark:text-gray-400">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span className="text-sm">{experience.period}</span>
-          </div>
-        </div>
+      {/* Timeline Line */}
+      <div className="absolute left-0 top-0 bottom-0 w-px bg-border group-last:bottom-auto group-last:h-full" />
+      
+      {/* Timeline Dot */}
+      <div 
+        className={`absolute left-[-4px] top-8 w-2 h-2 rounded-full transition-colors duration-300 ${
+          isHovered ? 'bg-primary' : 'bg-muted-foreground'
+        }`}
+      />
 
-        <div className="flex items-center text-primary-light dark:text-primary-dark mb-4">
-          <Briefcase className="w-4 h-4 mr-2" />
-          <span className="font-medium">{experience.company}</span>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 mb-2">
+        <h3 className={`text-xl font-display font-semibold transition-colors duration-300 ${
+          isHovered ? 'text-primary' : 'text-foreground'
+        }`}>
+          {exp.title}
+        </h3>
+        <span className="text-muted-foreground font-mono text-sm">
+          {exp.company} • {exp.period}
+        </span>
+      </div>
 
-        <ul className="mb-4 space-y-2">
-          {experience.description.map((item, i) => (
-            <li key={i} className="text-gray-600 dark:text-gray-300 text-sm">
-              • {item}
-            </li>
-          ))}
-        </ul>
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <ul className="space-y-2 mt-4 mb-6">
+              {exp.description.map((item, i) => (
+                <li key={i} className="text-muted-foreground text-sm flex items-start gap-2">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-primary/50 shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <div className="flex flex-wrap gap-2">
-          {experience.technologies.map((tech, i) => (
-            <span
-              key={i}
-              className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300"
-            >
-              {tech}
-            </span>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-2 mt-4">
+        {exp.technologies.map((tech, i) => (
+          <span
+            key={i}
+            className="text-xs font-mono text-muted-foreground bg-secondary/50 px-2 py-1 rounded"
+          >
+            {tech}
+          </span>
+        ))}
       </div>
     </motion.div>
   );
@@ -73,10 +82,6 @@ const ExperienceCard: React.FC<{
 
 export const Experience = () => {
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
 
   useEffect(() => {
     const fetchExperiences = async () => {
@@ -106,25 +111,22 @@ export const Experience = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-gray-50 dark:bg-gray-900" id="experience">
-      <div className="max-w-4xl mx-auto px-4">
+    <section className="py-32 px-6 relative z-10" id="experience">
+      <div className="max-w-3xl mx-auto">
         <motion.div
-          ref={ref}
           initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          className="text-center mb-16"
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-16"
         >
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary-light to-blue-600 dark:from-primary-dark dark:to-blue-400 bg-clip-text text-transparent">
-            Professional Experience
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            A timeline of my professional journey and achievements
-          </p>
+          <h2 className="text-3xl font-display font-bold mb-4">Experience</h2>
+          <p className="text-muted-foreground">My professional journey so far.</p>
         </motion.div>
 
-        <div className="relative">
+        <div className="space-y-4">
           {experiences.map((experience, index) => (
-            <ExperienceCard key={index} experience={experience} index={index} />
+            <ExperienceItemComponent key={index} exp={experience} index={index} />
           ))}
         </div>
       </div>
