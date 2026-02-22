@@ -7,7 +7,7 @@ const getApiBaseUrl = () => {
     return 'https://pras75299portfolio.vercel.app';
   }
 
-  // Development - use proxy (Vite will proxy /api/* to localhost:8080)
+  // Development - use empty base so Vite proxy forwards /api/* to the backend
   return '';
 };
 

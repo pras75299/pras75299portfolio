@@ -14,7 +14,6 @@ export default defineConfig({
       '/api': {
         target: 'https://pras75299portfolio.vercel.app',
         changeOrigin: true,
-        secure: false,
       },
     },
   },
