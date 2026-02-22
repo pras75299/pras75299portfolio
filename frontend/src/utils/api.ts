@@ -1,8 +1,14 @@
 // API configuration for different environments
 const getApiBaseUrl = () => {
-  // Always use the production backend URL to avoid local Vite proxy ENOTFOUND issues
-  // The backend on Vercel is configured to allow CORS for http://localhost:5173
-  return 'https://pras75299portfolio.vercel.app';
+  const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
+
+  if (isProduction) {
+    // Backend URL - explicitly set for production
+    return 'https://pras75299portfolio.vercel.app';
+  }
+
+  // Development - use proxy (Vite will proxy /api/* to localhost:8080)
+  return '';
 };
 
 const API_BASE_URL = getApiBaseUrl();
