@@ -5,6 +5,7 @@ import { validateExperience } from "../validators/experienceValidator.js";
 export const getExperiences = async (req, res) => {
   try {
     const experiences = await Experience.find().sort({ startDate: -1 });
+    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
     res.json(experiences);
   } catch (error) {
     res.status(500).json({ message: error.message });
