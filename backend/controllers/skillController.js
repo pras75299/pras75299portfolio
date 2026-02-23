@@ -4,6 +4,7 @@ import { validateSkill } from "../validators/skillValidator.js";
 export const getSkills = async (req, res) => {
   try {
     const skills = await Skill.find().sort({ createdAt: -1 });
+    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
     res.json(skills);
   } catch (error) {
     res.status(500).json({ message: error.message });

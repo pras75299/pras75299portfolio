@@ -34,4 +34,6 @@ const projectSchema = new mongoose.Schema({
   timestamps: true
 });
 
+projectSchema.index({ createdAt: -1 });
+
 export default mongoose.model('Project', projectSchema);
