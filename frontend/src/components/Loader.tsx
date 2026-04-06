@@ -1,50 +1,63 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 interface LoaderProps {
   onComplete: () => void;
 }
 
 const Loader = ({ onComplete }: LoaderProps) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 2500);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      tl.from(".ld-name", { y: 32, opacity: 0, duration: 0.7 })
+        .from(
+          ".ld-bar",
+          {
+            scaleX: 0,
+            duration: 0.75,
+            ease: "power2.inOut",
+            transformOrigin: "left center",
+          },
+          "-=0.35"
+        )
+        .to(
+          ".ld-inner",
+          {
+            y: -24,
+            opacity: 0,
+            duration: 0.45,
+            ease: "power2.in",
+            delay: 0.3,
+          }
+        )
+        .to(
+          rootRef.current,
+          { opacity: 0, duration: 0.35, ease: "power1.in", onComplete },
+          "-=0.1"
+        );
+    }, rootRef);
+
+    return () => ctx.revert();
   }, [onComplete]);
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
+    <div
+      ref={rootRef}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
     >
-      <div className="relative overflow-hidden">
-        <motion.h1
-          className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-foreground tracking-tight"
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ 
-            duration: 0.8, 
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        >
+      <div className="ld-inner text-center px-6">
+        <p className="ld-name font-mono text-xs text-primary tracking-[0.3em] uppercase mb-5">
           Prashant Kumar Singh
-        </motion.h1>
-        
-        <motion.div
-          className="h-[2px] bg-foreground/40 mt-4 mx-auto"
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{ 
-            duration: 0.6, 
-            ease: "easeOut",
-            delay: 0.4
-          }}
-        />
+        </p>
+        <h1 className="ld-name text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-5">
+          Full Stack &amp; Rust Engineer
+        </h1>
+        <div className="ld-bar h-[1.5px] w-full bg-primary rounded-full" />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -34,7 +34,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             className="fixed inset-y-0 right-0 w-full max-w-sm bg-background border-l border-border z-[60] shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <span className="text-xl font-display font-bold">Menu</span>
+              <span className="text-xl font-bold">Menu</span>
               <button
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-secondary transition-colors"
@@ -62,7 +62,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                           onClose();
                         }
                       }}
-                      className={`block text-2xl font-display font-medium transition-colors ${
+                      className={`block text-2xl font-semibold transition-colors ${
                         activeSection === item.name
                           ? 'text-primary'
                           : 'text-muted-foreground hover:text-foreground'
