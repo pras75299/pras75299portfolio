@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Github } from "lucide-react";
 import axios from "axios";
 import { apiClient } from "../utils/api";
 
@@ -21,10 +21,11 @@ export const Projects = () => {
     const fetchProjects = async () => {
       try {
         const response = await axios.get(apiClient.projects);
-        const mappedProjects = response.data.map((project: any) => ({
+        const rows = Array.isArray(response.data) ? response.data : [];
+        const mappedProjects = rows.map((project: any) => ({
           title: project.title,
           image: project.image,
-          tech: project.technologies,
+          tech: Array.isArray(project.technologies) ? project.technologies : [],
           github: project.githubUrl,
           live: project.liveUrl,
           category: project.category,
@@ -65,6 +66,12 @@ export const Projects = () => {
         </motion.div>
 
         <div className="space-y-12">
+          {projects.length === 0 && (
+            <p className="text-muted-foreground font-mono text-sm">
+              No projects loaded. Check DevTools → Network for{" "}
+              <code className="text-xs">/api/projects</code>.
+            </p>
+          )}
           {projects.map((project, index) => (
             <motion.div
               key={index}
@@ -74,17 +81,45 @@ export const Projects = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group"
             >
-              <a 
-                href={project.live || project.github} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block border-b border-border pb-8 hover:border-primary transition-colors"
-              >
+              <div className="block border-b border-border pb-8 hover:border-primary transition-colors">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-4 gap-2">
-                  <h3 className="text-2xl font-display font-bold group-hover:text-primary transition-colors flex items-center gap-2">
-                    {project.title}
-                    <ArrowUpRight className="w-5 h-5 opacity-0 -translate-x-2 translate-y-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all" />
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={project.live || project.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-2xl font-display font-bold group-hover:text-primary transition-colors flex items-center gap-2"
+                    >
+                      {project.title}
+                      <ArrowUpRight className="w-5 h-5 opacity-0 -translate-x-2 translate-y-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all" />
+                    </a>
+                    <div className="flex items-center gap-2">
+                      {project.live && (
+                        <a
+                          href={project.live}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Open live site for ${project.title}`}
+                          className="rounded-full border border-border bg-secondary/40 p-2 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
+                        </a>
+                      )}
+                      {project.github && (
+                        <a
+                          href={project.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Open GitHub repository for ${project.title}`}
+                          className="rounded-full border border-border bg-secondary/40 p-2 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Github className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
                   <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{project.category}</span>
                 </div>
                 
@@ -98,7 +133,7 @@ export const Projects = () => {
                     </span>
                   ))}
                 </div>
-              </a>
+              </div>
             </motion.div>
           ))}
         </div>

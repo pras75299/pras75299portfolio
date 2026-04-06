@@ -7,7 +7,10 @@ import fs from "fs";
 export const getProjects = async (req, res) => {
   try {
     const projects = await Project.find().sort({ createdAt: -1 });
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
+    res.setHeader(
+      "Cache-Control",
+      "private, no-store, must-revalidate"
+    );
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });

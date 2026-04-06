@@ -35,13 +35,25 @@ const limiter = rateLimit({
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+const defaultCorsOrigins = [
+  "https://codexprashantsingh.vercel.app",
+  "https://codexprashantsingh.netlify.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+const extraOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const allowedCorsOrigins = new Set([...defaultCorsOrigins, ...extraOrigins]);
+
 app.use(
   cors({
-    origin: [
-      "https://codexprashantsingh.vercel.app",
-      "https://codexprashantsingh.netlify.app",
-      "http://localhost:5173",
-    ],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedCorsOrigins.has(origin)) return callback(null, true);
+      callback(null, false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
