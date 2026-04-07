@@ -25,14 +25,20 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
       {/* Drawer */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!isOpen}
         className={`fixed inset-y-0 right-0 w-full max-w-sm bg-background border-l border-border z-[60] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+          isOpen
+            ? "translate-x-0 visible pointer-events-auto"
+            : "translate-x-full invisible pointer-events-none"
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-border">
           <span className="text-xl font-bold">Menu</span>
           <button
             onClick={onClose}
+            aria-label="Close menu"
             className="p-2 rounded-full hover:bg-secondary transition-colors"
           >
             <X className="w-6 h-6" />
@@ -50,8 +56,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                     const element = document.querySelector(item.href);
                     if (element) {
                       element.scrollIntoView({ behavior: "smooth" });
-                      onClose();
                     }
+                    onClose();
                   }}
                   className={`block text-2xl font-semibold transition-colors ${
                     activeSection === item.name

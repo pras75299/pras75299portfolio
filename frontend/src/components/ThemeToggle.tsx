@@ -75,6 +75,7 @@ export const ThemeToggle = () => {
 
   return (
     <button
+      type="button"
       ref={buttonRef}
       onClick={handleToggle}
       className="p-2 rounded-full transition-transform duration-150 hover:scale-110 active:scale-90"
