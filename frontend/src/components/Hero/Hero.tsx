@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { Github, Linkedin, Twitter, Mail, ArrowUpRight } from "lucide-react";
+import { Github, Linkedin, Twitter } from "lucide-react";
 
 export const Hero = () => {
   const rootRef = useRef<HTMLElement>(null);

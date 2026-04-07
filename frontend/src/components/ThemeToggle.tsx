@@ -1,6 +1,5 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Moon, Sun } from "lucide-react";
-import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import { flushSync } from "react-dom";
 
@@ -75,12 +74,11 @@ export const ThemeToggle = () => {
   };
 
   return (
-    <motion.button
+    <button
+      type="button"
       ref={buttonRef}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
       onClick={handleToggle}
-      className="p-2 rounded-full bg-opacity-20 hover:bg-opacity-30 transition-colors"
+      className="p-2 rounded-full transition-transform duration-150 hover:scale-110 active:scale-90"
       aria-label="Toggle theme"
     >
       {theme === "light" ? (
@@ -88,6 +86,6 @@ export const ThemeToggle = () => {
       ) : (
         <Moon className="w-5 h-5" />
       )}
-    </motion.button>
+    </button>
   );
 };

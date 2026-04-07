@@ -31,11 +31,18 @@ export const Skills = () => {
     const ctx = gsap.context(() => {
       gsap.from(".sk-heading", {
         scrollTrigger: { trigger: ".sk-heading", start: "top 88%", once: true },
-        y: 24, opacity: 0, duration: 0.6, ease: "power3.out",
+        y: 24,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power3.out",
       });
       gsap.from(".sk-chip", {
         scrollTrigger: { trigger: ".sk-chip", start: "top 90%", once: true },
-        y: 14, opacity: 0, duration: 0.4, stagger: 0.03, ease: "power2.out",
+        y: 14,
+        opacity: 0,
+        duration: 0.4,
+        stagger: 0.03,
+        ease: "power2.out",
       });
     }, sectionRef);
     return () => ctx.revert();
@@ -48,7 +55,9 @@ export const Skills = () => {
           <p className="text-xs font-mono text-primary tracking-widest uppercase mb-2">
             Skills
           </p>
-          <h2 className="text-3xl font-bold text-foreground">Technologies I Use</h2>
+          <h2 className="text-3xl font-bold text-foreground">
+            Technologies I Use
+          </h2>
         </div>
 
         {/* Chip grid */}
@@ -62,19 +71,6 @@ export const Skills = () => {
             </div>
           ))}
         </div>
-
-        {/* Subtle ticker */}
-        {technologies.length > 0 && (
-          <div className="mt-14 overflow-hidden">
-            <div className="flex gap-8 animate-ticker whitespace-nowrap" aria-hidden="true">
-              {[...technologies, ...technologies].map((t, i) => (
-                <span key={i} className="text-xl font-bold text-foreground/[0.04] shrink-0">
-                  {t.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
