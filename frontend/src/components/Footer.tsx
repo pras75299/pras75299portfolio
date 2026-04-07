@@ -1,53 +1,32 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Github, Linkedin, Twitter } from 'lucide-react';
+import { Github, Linkedin, Twitter } from "lucide-react";
 
 export const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="w-full py-8 px-6 mt-20 border-t border-white/5 relative z-10 backdrop-blur-sm">
-      <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="text-muted-foreground text-sm font-mono">
-          © {currentYear} Prashant Kumar Singh. All rights reserved.
+    <footer className="border-t border-border py-8 px-6 relative z-10">
+      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs font-mono text-muted-foreground">
+          © {year} Prashant Kumar Singh
         </p>
-        
-        <div className="flex gap-4">
-          <motion.a
-            href="https://github.com/pras75299"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.1, color: "var(--foreground)" }}
-            whileTap={{ scale: 0.95 }}
-            className="text-muted-foreground transition-colors"
-          >
-            <Github className="w-5 h-5" />
-            <span className="sr-only">GitHub</span>
-          </motion.a>
-          
-          <motion.a
-            href="https://www.linkedin.com/in/wordsprashant/"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.1, color: "var(--primary)" }}
-            whileTap={{ scale: 0.95 }}
-            className="text-muted-foreground transition-colors"
-          >
-            <Linkedin className="w-5 h-5" />
-            <span className="sr-only">LinkedIn</span>
-          </motion.a>
-          
-          <motion.a
-            href="https://x.com/asNobodyLikes"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.1, color: "var(--foreground)" }}
-            whileTap={{ scale: 0.95 }}
-            className="text-muted-foreground transition-colors"
-          >
-            <Twitter className="w-5 h-5" />
-            <span className="sr-only">Twitter</span>
-          </motion.a>
+
+        <div className="flex items-center gap-4">
+          {[
+            { href: "https://github.com/pras75299",              icon: Github,   label: "GitHub"   },
+            { href: "https://www.linkedin.com/in/wordsprashant/", icon: Linkedin, label: "LinkedIn" },
+            { href: "https://x.com/asNobodyLikes",                icon: Twitter,  label: "Twitter"  },
+          ].map(({ href, icon: Icon, label }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={label}
+              className="text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
+            >
+              <Icon className="w-4 h-4" />
+            </a>
+          ))}
         </div>
       </div>
     </footer>

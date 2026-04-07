@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
 import Loader from "./components/Loader";
 import BackgroundAnimation from "./components/BackgroundAnimation";
 import CursorSpotlight from "./components/CursorSpotlight";
@@ -19,30 +19,45 @@ import ChatButton from "./components/ChatButton";
 function App() {
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const mainRef = useRef<HTMLDivElement>(null);
 
+  // Lock scroll while loader is active
   useEffect(() => {
-    // Prevent scrolling while loading
-    if (loading) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+    document.body.style.overflow = loading ? "hidden" : "unset";
+  }, [loading]);
+
+  // When the loader calls onComplete, the main wrapper is already rendered
+  // with opacity:0 (inline style below). This effect makes it visible
+  // immediately — by this point Hero's useEffect has fired and GSAP's
+  // immediateRender has already set the hero elements to their start
+  // values (y offset + opacity:0), so there is no visible flash.
+  useEffect(() => {
+    if (!loading && mainRef.current) {
+      gsap.set(mainRef.current, { opacity: 1 });
     }
   }, [loading]);
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300 selection:bg-primary/30 relative">
-        <AnimatePresence mode="wait">
-          {loading && <Loader onComplete={() => setLoading(false)} />}
-        </AnimatePresence>
-        
+      <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 relative">
+
+        {/* Always rendered so Three.js/WebGL warms up during the loader phase.
+            The Loader sits above at z-[100] with bg-background, so these are
+            invisible to the user until the loader exits — but by then the
+            canvas has already rendered its first frame, eliminating the blink. */}
+        <BackgroundAnimation />
+        <CursorSpotlight />
+
+        {/* Loader — sits on top (z-[100]) while active */}
+        {loading && <Loader onComplete={() => setLoading(false)} />}
+
+        {/* Main content — rendered immediately but invisible until loader
+            finishes; opacity:0 on the wrapper prevents the one-frame blink */}
         {!loading && (
-          <>
-            <BackgroundAnimation />
-            <CursorSpotlight />
+          <div ref={mainRef} style={{ opacity: 0 }}>
             <Navbar />
-            
-            <main className="relative z-10 space-y-32">
+
+            <main className="relative z-10">
               <Hero />
               <Experience />
               <Projects />
@@ -50,18 +65,18 @@ function App() {
               <GithubContributions />
               <Contact />
             </main>
-            
+
             <Footer />
             <RabbitFollower />
 
-            {/* Chat Components */}
             <ChatButton onClick={() => setIsChatOpen(true)} />
             <ChatAssistant
               isOpen={isChatOpen}
               onClose={() => setIsChatOpen(false)}
             />
-          </>
+          </div>
         )}
+
       </div>
     </ThemeProvider>
   );
