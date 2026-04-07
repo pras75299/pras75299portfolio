@@ -38,6 +38,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           <span className="text-xl font-bold">Menu</span>
           <button
             onClick={onClose}
+            type="button"
             aria-label="Close menu"
             className="p-2 rounded-full hover:bg-secondary transition-colors"
           >
