@@ -15,20 +15,50 @@ interface ExperienceItem {
   technologies: string[];
 }
 
-const ExpCard = ({ exp, index }: { exp: ExperienceItem; index: number }) => {
+const ExpCard = ({ exp }: { exp: ExperienceItem }) => {
   const [open, setOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = bodyRef.current;
     if (!el) return;
+    gsap.killTweensOf(el);
+
     if (open) {
-      gsap.fromTo(el,
-        { height: 0, opacity: 0 },
-        { height: "auto", opacity: 1, duration: 0.32, ease: "power2.out" }
+      // Pixel height avoids tweening height: "auto" (complex CSS string / plugin path that can trip GSAP)
+      let fullHeight = el.scrollHeight;
+      if (fullHeight <= 0) {
+        const prev = el.style.height;
+        el.style.height = "auto";
+        fullHeight = el.offsetHeight;
+        el.style.height = prev;
+      }
+      gsap.fromTo(
+        el,
+        { height: 0, autoAlpha: 0 },
+        {
+          height: fullHeight,
+          autoAlpha: 1,
+          duration: 0.32,
+          ease: "power2.out",
+          onComplete: () => {
+            gsap.set(el, { height: "auto" });
+          },
+        }
       );
     } else {
-      gsap.to(el, { height: 0, opacity: 0, duration: 0.25, ease: "power2.in" });
+      const h = el.offsetHeight;
+      if (h <= 0) {
+        gsap.set(el, { autoAlpha: 0 });
+        return;
+      }
+      gsap.set(el, { height: h });
+      gsap.to(el, {
+        height: 0,
+        autoAlpha: 0,
+        duration: 0.25,
+        ease: "power2.in",
+      });
     }
   }, [open]);
 
@@ -116,16 +146,36 @@ export const Experience = () => {
   }, []);
 
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
     const ctx = gsap.context(() => {
-      gsap.from(".exp-heading", {
-        scrollTrigger: { trigger: ".exp-heading", start: "top 88%", once: true },
-        y: 24, opacity: 0, duration: 0.6, ease: "power3.out",
-      });
-      gsap.from(".exp-card", {
-        scrollTrigger: { trigger: ".exp-card", start: "top 90%", once: true },
-        y: 20, opacity: 0, duration: 0.5, stagger: 0.1, ease: "power2.out",
-      });
-    }, sectionRef);
+      const heading = section.querySelector<HTMLElement>(".exp-heading");
+      const cards = section.querySelectorAll<HTMLElement>(".exp-card");
+
+      if (heading) {
+        gsap.from(heading, {
+          scrollTrigger: { trigger: heading, start: "top 88%", once: true },
+          y: 24,
+          opacity: 0,
+          duration: 0.6,
+          ease: "power3.out",
+        });
+      }
+
+      // No cards while loading or on empty API response — skip to avoid missing targets / tween errors
+      if (cards.length > 0) {
+        gsap.from(cards, {
+          scrollTrigger: { trigger: section, start: "top 90%", once: true },
+          y: 20,
+          opacity: 0,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: "power2.out",
+        });
+      }
+    }, section);
+
     return () => ctx.revert();
   }, [experiences]);
 
@@ -141,7 +191,7 @@ export const Experience = () => {
 
         <div className="space-y-3">
           {experiences.map((exp, i) => (
-            <ExpCard key={i} exp={exp} index={i} />
+            <ExpCard key={i} exp={exp} />
           ))}
         </div>
       </div>

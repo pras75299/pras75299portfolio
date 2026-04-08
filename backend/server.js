@@ -66,7 +66,9 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
-app.use(morgan("dev"));
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
 app.use(limiter);
 
 // Content-Type headers

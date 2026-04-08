@@ -9,6 +9,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// In-memory cache for portfolio context (5-minute TTL)
+let portfolioCache = null;
+let portfolioCacheExpiry = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 // Calculate total experience duration
 const calculateTotalExperience = (experiences) => {
   if (!experiences || experiences.length === 0) {
@@ -16,7 +21,7 @@ const calculateTotalExperience = (experiences) => {
   }
 
   // Find the earliest start date
-  const sortedExperiences = experiences.sort(
+  const sortedExperiences = [...experiences].sort(
     (a, b) => new Date(a.startDate) - new Date(b.startDate)
   );
   const firstJobStartDate = new Date(sortedExperiences[0].startDate);
@@ -47,24 +52,26 @@ const calculateTotalExperience = (experiences) => {
   return result;
 };
 
-// Get all portfolio data for context
+// Get all portfolio data for context (cached)
 const getPortfolioContext = async () => {
+  const now = Date.now();
+  if (portfolioCache && now < portfolioCacheExpiry) {
+    return portfolioCache;
+  }
+
   try {
     const [experiences, projects, skills] = await Promise.all([
-      Experience.find().sort({ startDate: -1 }),
-      Project.find().sort({ createdAt: -1 }),
-      Skill.find().sort({ category: 1 }),
+      Experience.find().sort({ startDate: -1 }).lean(),
+      Project.find().sort({ createdAt: -1 }).lean(),
+      Skill.find().sort({ category: 1 }).lean(),
     ]);
 
     // Calculate total experience
     const totalExperience = calculateTotalExperience(experiences);
 
-    return {
-      experiences,
-      projects,
-      skills,
-      totalExperience,
-    };
+    portfolioCache = { experiences, projects, skills, totalExperience };
+    portfolioCacheExpiry = now + CACHE_TTL_MS;
+    return portfolioCache;
   } catch (error) {
     console.error("Error fetching portfolio data:", error);
     return {
