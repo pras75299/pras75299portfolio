@@ -16,6 +16,38 @@ interface Project {
   category: string;
 }
 
+// ── Skeleton — mirrors ProjectCard layout exactly ─────────────────────────────
+const ProjectSkeleton = ({ delay = 0 }: { delay?: number }) => (
+  <div
+    className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4"
+    style={{ animationDelay: `${delay}ms` }}
+  >
+    {/* Category chip + title row */}
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="h-2.5 w-14 rounded bg-muted animate-pulse mb-2" />
+        <div className="h-4 w-4/5 rounded bg-muted animate-pulse" />
+      </div>
+      {/* Icon buttons */}
+      <div className="flex items-center gap-2 shrink-0 mt-0.5">
+        <div className="h-7 w-7 rounded border border-border bg-muted animate-pulse" />
+        <div className="h-7 w-7 rounded border border-border bg-muted animate-pulse" />
+      </div>
+    </div>
+    {/* Tech chips */}
+    <div className="flex flex-wrap gap-1.5 mt-auto">
+      {[56, 44, 68, 50].map((w, i) => (
+        <div
+          key={i}
+          className="h-5 rounded bg-muted animate-pulse"
+          style={{ width: w, animationDelay: `${delay + i * 60}ms` }}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+// ── Real card ─────────────────────────────────────────────────────────────────
 const ProjectCard = ({ project }: { project: Project }) => (
   <div className="proj-card group bg-card border border-border rounded-lg p-5 flex flex-col gap-4 hover:border-border/80 transition-colors duration-200">
     {/* Header */}
@@ -72,6 +104,7 @@ const ProjectCard = ({ project }: { project: Project }) => (
   </div>
 );
 
+// ── Section ───────────────────────────────────────────────────────────────────
 export const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +123,7 @@ export const Projects = () => {
             github: p.githubUrl,
             live: p.liveUrl,
             category: p.category,
-          }))
+          })),
         );
       } catch (err) {
         console.error(err);
@@ -105,11 +138,18 @@ export const Projects = () => {
     const ctx = gsap.context(() => {
       gsap.from(".proj-heading", {
         scrollTrigger: { trigger: ".proj-heading", start: "top 88%", once: true },
-        y: 24, opacity: 0, duration: 0.6, ease: "power3.out",
+        y: 24,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power3.out",
       });
       gsap.from(".proj-card", {
         scrollTrigger: { trigger: ".proj-card", start: "top 90%", once: true },
-        y: 20, opacity: 0, duration: 0.5, stagger: 0.08, ease: "power2.out",
+        y: 20,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: "power2.out",
       });
     }, sectionRef);
     return () => ctx.revert();
@@ -126,10 +166,16 @@ export const Projects = () => {
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground font-mono">Loading projects…</p>
+          // 4 skeletons in the same 2-col grid — staggered pulse delay
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[0, 100, 200, 300].map((delay) => (
+              <ProjectSkeleton key={delay} delay={delay} />
+            ))}
+          </div>
         ) : projects.length === 0 ? (
           <p className="text-sm text-muted-foreground font-mono">
-            No projects found — check <code className="text-primary">/api/projects</code>.
+            No projects found — check{" "}
+            <code className="text-primary">/api/projects</code>.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

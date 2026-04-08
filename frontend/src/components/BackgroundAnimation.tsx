@@ -2,38 +2,43 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useEffect } from "react";
 import * as THREE from "three";
 
-// Color stops for scroll gradient (cyan -> purple -> blue)
-const colorStops = [
-  new THREE.Color("#4fd1c5"), // Cyan (top)
-  new THREE.Color("#a78bfa"), // Purple (middle)
-  new THREE.Color("#60a5fa"), // Blue (bottom)
+// ── Theme-aware color stops ───────────────────────────────────────────────────
+// Dark mode: bright orange/amber visible on near-black background
+const darkColorStops = [
+  new THREE.Color("#F97316"), // orange-500  (top of page)
+  new THREE.Color("#FBBF24"), // amber-400   (mid scroll)
+  new THREE.Color("#FB923C"), // orange-400  (bottom)
+];
+// Light mode: deeper orange/amber for contrast on white background
+const lightColorStops = [
+  new THREE.Color("#C2410C"), // orange-700
+  new THREE.Color("#D97706"), // amber-600
+  new THREE.Color("#EA580C"), // orange-600
 ];
 
-const lerpColor = (scroll: number): THREE.Color => {
+const lerpColor = (scroll: number, isDark: boolean): THREE.Color => {
+  const stops = isDark ? darkColorStops : lightColorStops;
   const t = Math.max(0, Math.min(1, scroll));
-  
   if (t < 0.5) {
-    const localT = t * 2;
-    return colorStops[0].clone().lerp(colorStops[1], localT);
-  } else {
-    const localT = (t - 0.5) * 2;
-    return colorStops[1].clone().lerp(colorStops[2], localT);
+    return stops[0].clone().lerp(stops[1], t * 2);
   }
+  return stops[1].clone().lerp(stops[2], (t - 0.5) * 2);
 };
 
+// ── WaveGrid ─────────────────────────────────────────────────────────────────
 interface WaveGridProps {
   scrollProgressRef: React.RefObject<number>;
   mouseRef: React.RefObject<{ x: number; y: number }>;
+  isDarkRef: React.RefObject<boolean>;
 }
 
-const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
+const WaveGrid = ({ scrollProgressRef, mouseRef, isDarkRef }: WaveGridProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
   const lineMaterialRef = useRef<THREE.LineBasicMaterial>(null);
   const pointMaterialRef = useRef<THREE.PointsMaterial>(null);
 
-  // Smoothed mouse position for lerping
   const smoothMouse = useRef({ x: 0, y: 0 });
 
   const gridSize = 28;
@@ -55,17 +60,12 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
         pos[idx] = x;
         pos[idx + 1] = 0;
         pos[idx + 2] = z;
-
         original[idx] = x;
         original[idx + 1] = 0;
         original[idx + 2] = z;
 
-        if (j < gridSize - 1) {
-          indices.push(index, index + 1);
-        }
-        if (i < gridSize - 1) {
-          indices.push(index, index + gridSize);
-        }
+        if (j < gridSize - 1) indices.push(index, index + 1);
+        if (i < gridSize - 1) indices.push(index, index + gridSize);
       }
     }
 
@@ -80,11 +80,13 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
     const t = state.clock.elapsedTime;
     const scrollProgress = scrollProgressRef.current ?? 0;
     const mouse = mouseRef.current ?? { x: 0, y: 0 };
+    const isDark = isDarkRef.current ?? true;
 
-    // Smooth mouse interpolation
+    // Smooth mouse
     smoothMouse.current.x += (mouse.x - smoothMouse.current.x) * 0.05;
     smoothMouse.current.y += (mouse.y - smoothMouse.current.y) * 0.05;
 
+    // Update wave geometry
     if (pointsRef.current && linesRef.current) {
       const pointsAttr = pointsRef.current.geometry.attributes.position;
       const linesAttr = linesRef.current.geometry.attributes.position;
@@ -96,19 +98,19 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
         const x = originalPositions[idx];
         const z = originalPositions[idx + 2];
 
-        // Base wave motion
         let y =
           Math.sin(x * 0.4 + t * 0.5) * 0.3 +
           Math.cos(z * 0.4 + t * 0.4) * 0.3;
 
-        // Mouse influence - create ripple effect based on distance from mouse
-        const mouseInfluenceX = smoothMouse.current.x * 8; // Scale to grid space
+        const mouseInfluenceX = smoothMouse.current.x * 8;
         const mouseInfluenceZ = smoothMouse.current.y * 8;
         const distToMouse = Math.sqrt(
-          Math.pow(x - mouseInfluenceX, 2) + Math.pow(z - mouseInfluenceZ, 2)
+          Math.pow(x - mouseInfluenceX, 2) + Math.pow(z - mouseInfluenceZ, 2),
         );
-        const mouseWave = Math.sin(distToMouse * 0.5 - t * 2) * Math.max(0, 1 - distToMouse * 0.08) * 0.4;
-        y += mouseWave;
+        y +=
+          Math.sin(distToMouse * 0.5 - t * 2) *
+          Math.max(0, 1 - distToMouse * 0.08) *
+          0.4;
 
         pointsArr[idx + 1] = y;
         linesArr[idx + 1] = y;
@@ -118,17 +120,20 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
       linesAttr.needsUpdate = true;
     }
 
-    // Update colors based on scroll
-    const currentColor = lerpColor(scrollProgress);
+    // Theme-aware color + opacity
+    const currentColor = lerpColor(scrollProgress, isDark);
     if (lineMaterialRef.current) {
       lineMaterialRef.current.color = currentColor;
+      // Higher opacity on light bg so lines stay visible against white
+      lineMaterialRef.current.opacity = isDark ? 0.15 : 0.28;
     }
     if (pointMaterialRef.current) {
       pointMaterialRef.current.color = currentColor;
+      pointMaterialRef.current.opacity = isDark ? 0.28 : 0.45;
     }
 
+    // Group transform
     if (groupRef.current) {
-      // Base rotation + mouse parallax
       groupRef.current.rotation.x = -0.5 + smoothMouse.current.y * 0.1;
       groupRef.current.rotation.z = t * 0.02 + smoothMouse.current.x * 0.05;
       groupRef.current.position.x = smoothMouse.current.x * 0.5;
@@ -155,7 +160,7 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
         </bufferGeometry>
         <lineBasicMaterial
           ref={lineMaterialRef}
-          color="#4fd1c5"
+          color="#F97316"
           transparent
           opacity={0.15}
           depthWrite={false}
@@ -174,7 +179,7 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
         <pointsMaterial
           ref={pointMaterialRef}
           size={0.05}
-          color="#4fd1c5"
+          color="#F97316"
           transparent
           opacity={0.28}
           depthWrite={false}
@@ -185,28 +190,40 @@ const WaveGrid = ({ scrollProgressRef, mouseRef }: WaveGridProps) => {
   );
 };
 
+// ── BackgroundAnimation ───────────────────────────────────────────────────────
 const BackgroundAnimation = () => {
   const scrollProgressRef = useRef(0);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const isDarkRef = useRef(!document.documentElement.classList.contains("light"));
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
-      scrollProgressRef.current = progress;
+      const scrollHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgressRef.current =
+        scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Normalize mouse position to -1 to 1
       mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
+
+    // Watch light ↔ dark class toggle on <html>
+    const observer = new MutationObserver(() => {
+      isDarkRef.current = !document.documentElement.classList.contains("light");
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     handleScroll();
 
     return () => {
+      observer.disconnect();
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("mousemove", handleMouseMove);
     };
@@ -219,11 +236,14 @@ const BackgroundAnimation = () => {
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true }}
       >
-        <WaveGrid scrollProgressRef={scrollProgressRef} mouseRef={mouseRef} />
+        <WaveGrid
+          scrollProgressRef={scrollProgressRef}
+          mouseRef={mouseRef}
+          isDarkRef={isDarkRef}
+        />
       </Canvas>
     </div>
   );
 };
 
 export default BackgroundAnimation;
-
