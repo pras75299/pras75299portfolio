@@ -83,6 +83,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Ensure DB is connected before every API request (critical for serverless cold starts)
+app.use("/api", async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("DB connection failed on request:", error.message);
+    res.status(503).json({ message: "Database unavailable" });
+  }
+});
+
 // Routes
 app.use("/api/projects", projectRoutes);
 app.use("/api/messages", messageRoutes);
