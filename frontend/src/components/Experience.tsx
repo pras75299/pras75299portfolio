@@ -151,8 +151,9 @@ export const Experience = () => {
     (async () => {
       try {
         const res = await axios.get(apiClient.experiences);
+        const rows = Array.isArray(res.data) ? res.data : [];
         setExperiences(
-          res.data.map((e: any) => ({
+          rows.map((e: any) => ({
             ...e,
             period: `${new Date(e.startDate).toLocaleDateString("en-US", {
               year: "numeric",
