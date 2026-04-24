@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronDown } from "lucide-react";
-import axios from "axios";
 import { apiClient } from "../utils/api";
+import { fetchCollection } from "../utils/resilientCollection";
+import { ApiSectionNotice } from "./ApiSectionNotice";
 
 // ── Skeleton — mirrors the collapsed ExpCard header ───────────────────────────
 const ExpSkeleton = ({ delay = 0 }: { delay?: number }) => (
@@ -41,6 +42,32 @@ interface ExperienceItem {
   description: string[];
   technologies: string[];
 }
+
+interface ExperienceApiRow {
+  company?: string;
+  current?: boolean;
+  description?: string[];
+  endDate?: string;
+  startDate?: string;
+  technologies?: string[];
+  title?: string;
+}
+
+const formatPeriod = (startDate?: string, endDate?: string, current?: boolean) => {
+  const formatDate = (value?: string) => {
+    if (!value) return "Unknown";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Unknown";
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return `${formatDate(startDate)} – ${current ? "Present" : formatDate(endDate)}`;
+};
 
 const ExpCard = ({ exp }: { exp: ExperienceItem }) => {
   const [open, setOpen] = useState(false);
@@ -145,36 +172,43 @@ const ExpCard = ({ exp }: { exp: ExperienceItem }) => {
 export const Experience = () => {
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const [requestSource, setRequestSource] = useState<"network" | "cache" | "fallback">("network");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await axios.get(apiClient.experiences);
-        const rows = Array.isArray(res.data) ? res.data : [];
-        setExperiences(
-          rows.map((e: any) => ({
-            ...e,
-            period: `${new Date(e.startDate).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-            })} – ${
-              e.current
-                ? "Present"
-                : new Date(e.endDate).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                  })
-            }`,
-          }))
-        );
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    let active = true;
+
+    const loadExperiences = async () => {
+      setLoading(true);
+
+      const result = await fetchCollection<ExperienceApiRow, ExperienceItem>({
+        cacheKey: "experiences",
+        mapItem: (experience) => ({
+          company: experience.company ?? "Unknown company",
+          description: Array.isArray(experience.description) ? experience.description : [],
+          period: formatPeriod(experience.startDate, experience.endDate, experience.current),
+          technologies: Array.isArray(experience.technologies) ? experience.technologies : [],
+          title: experience.title ?? "Unknown role",
+        }),
+        url: apiClient.experiences,
+      });
+
+      if (!active) return;
+
+      setExperiences(result.data);
+      setRequestSource(result.source);
+      setErrorMessage(result.errorMessage);
+      setLoading(false);
+    };
+
+    void loadExperiences();
+
+    return () => {
+      active = false;
+    };
+  }, [requestVersion]);
 
   useEffect(() => {
     if (loading) return;
@@ -221,12 +255,27 @@ export const Experience = () => {
           <h2 className="text-3xl font-bold text-foreground">Career Timeline</h2>
         </div>
 
+        {!loading && requestSource !== "network" && (
+          <ApiSectionNotice
+            errorMessage={errorMessage}
+            mode={requestSource === "cache" ? "cache" : "error"}
+            onRetry={() => setRequestVersion((value) => value + 1)}
+            sectionName="experience"
+          />
+        )}
+
         <div className="space-y-3">
           {loading ? (
             // 3 skeletons with staggered pulse delay
             [0, 120, 240].map((delay) => (
               <ExpSkeleton key={delay} delay={delay} />
             ))
+          ) : experiences.length === 0 ? (
+            <p className="text-sm text-muted-foreground font-mono">
+              {requestSource === "fallback"
+                ? "Experience is temporarily unavailable."
+                : "No experience entries found."}
+            </p>
           ) : (
             experiences.map((exp, i) => (
               <ExpCard key={i} exp={exp} />

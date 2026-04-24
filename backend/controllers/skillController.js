@@ -1,10 +1,17 @@
 import Skill from "../models/Skill.js";
 import { validateSkill } from "../validators/skillValidator.js";
+import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
 
 export const getSkills = async (req, res) => {
   try {
-    const skills = await Skill.find().sort({ createdAt: -1 });
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
+    const skills = await Skill.find()
+      .sort({ createdAt: -1 })
+      .select("name icon")
+      .lean();
+    setCollectionCacheHeaders(res, {
+      sMaxAge: 86400,
+      staleWhileRevalidate: 3600,
+    });
     res.json(skills);
   } catch (error) {
     res.status(500).json({ message: error.message });

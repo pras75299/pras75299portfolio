@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import axios from "axios";
 import { apiClient } from "../utils/api";
+import { fetchCollection } from "../utils/resilientCollection";
+import { ApiSectionNotice } from "./ApiSectionNotice";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,20 +12,55 @@ interface Technology {
   icon: string;
 }
 
+interface SkillApiRow {
+  icon?: string;
+  name?: string;
+}
+
+const SkillSkeleton = ({ delay = 0 }: { delay?: number }) => (
+  <div
+    className="h-10 w-28 rounded-md border border-border bg-card animate-pulse"
+    style={{ animationDelay: `${delay}ms` }}
+  />
+);
+
 export const Skills = () => {
   const [technologies, setTechnologies] = useState<Technology[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const [requestSource, setRequestSource] = useState<"network" | "cache" | "fallback">("network");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await axios.get(apiClient.skills);
-        setTechnologies(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, []);
+    let active = true;
+
+    const loadSkills = async () => {
+      setLoading(true);
+
+      const result = await fetchCollection<SkillApiRow, Technology>({
+        cacheKey: "skills",
+        mapItem: (skill) => ({
+          icon: skill.icon ?? "",
+          name: skill.name ?? "Unnamed skill",
+        }),
+        url: apiClient.skills,
+      });
+
+      if (!active) return;
+
+      setTechnologies(result.data);
+      setRequestSource(result.source);
+      setErrorMessage(result.errorMessage);
+      setLoading(false);
+    };
+
+    void loadSkills();
+
+    return () => {
+      active = false;
+    };
+  }, [requestVersion]);
 
   useEffect(() => {
     if (!technologies.length) return;
@@ -60,17 +96,38 @@ export const Skills = () => {
           </h2>
         </div>
 
+        {!loading && requestSource !== "network" && (
+          <ApiSectionNotice
+            errorMessage={errorMessage}
+            mode={requestSource === "cache" ? "cache" : "error"}
+            onRetry={() => setRequestVersion((value) => value + 1)}
+            sectionName="skills"
+          />
+        )}
+
         {/* Chip grid */}
         <div className="flex flex-wrap gap-2">
-          {technologies.map((tech, i) => (
-            <div
-              key={i}
-              className="sk-chip px-3.5 py-2 bg-card border border-border rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors duration-200 cursor-default"
-            >
-              {tech.name}
-            </div>
-          ))}
+          {loading
+            ? [0, 80, 160, 240, 320, 400].map((delay) => (
+                <SkillSkeleton key={delay} delay={delay} />
+              ))
+            : technologies.map((tech, i) => (
+                <div
+                  key={i}
+                  className="sk-chip px-3.5 py-2 bg-card border border-border rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors duration-200 cursor-default"
+                >
+                  {tech.name}
+                </div>
+              ))}
         </div>
+
+        {!loading && technologies.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground font-mono">
+            {requestSource === "fallback"
+              ? "Skills are temporarily unavailable."
+              : "No skills found."}
+          </p>
+        )}
       </div>
     </section>
   );

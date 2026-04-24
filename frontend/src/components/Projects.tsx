@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight, Github } from "lucide-react";
-import axios from "axios";
 import { apiClient } from "../utils/api";
+import { fetchCollection } from "../utils/resilientCollection";
+import { ApiSectionNotice } from "./ApiSectionNotice";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +15,15 @@ interface Project {
   github: string;
   live: string;
   category: string;
+}
+
+interface ProjectApiRow {
+  category?: string;
+  githubUrl?: string;
+  image?: string;
+  liveUrl?: string;
+  technologies?: string[];
+  title?: string;
 }
 
 // ── Skeleton — mirrors ProjectCard layout exactly ─────────────────────────────
@@ -108,33 +118,47 @@ const ProjectCard = ({ project }: { project: Project }) => (
 export const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const [requestSource, setRequestSource] = useState<"network" | "cache" | "fallback">("network");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await axios.get(apiClient.projects);
-        const rows = Array.isArray(res.data) ? res.data : [];
-        setProjects(
-          rows.map((p: any) => ({
-            title: p.title,
-            image: p.image,
-            tech: Array.isArray(p.technologies) ? p.technologies : [],
-            github: p.githubUrl,
-            live: p.liveUrl,
-            category: p.category,
-          })),
-        );
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    let active = true;
+
+    const loadProjects = async () => {
+      setLoading(true);
+
+      const result = await fetchCollection<ProjectApiRow, Project>({
+        cacheKey: "projects",
+        mapItem: (project) => ({
+          category: project.category ?? "Project",
+          github: project.githubUrl ?? "",
+          image: project.image ?? "",
+          live: project.liveUrl ?? "",
+          tech: Array.isArray(project.technologies) ? project.technologies : [],
+          title: project.title ?? "Untitled project",
+        }),
+        url: apiClient.projects,
+      });
+
+      if (!active) return;
+
+      setProjects(result.data);
+      setRequestSource(result.source);
+      setErrorMessage(result.errorMessage);
+      setLoading(false);
+    };
+
+    void loadProjects();
+
+    return () => {
+      active = false;
+    };
+  }, [requestVersion]);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || projects.length === 0) return;
     const ctx = gsap.context(() => {
       gsap.from(".proj-heading", {
         scrollTrigger: { trigger: ".proj-heading", start: "top 88%", once: true },
@@ -153,7 +177,7 @@ export const Projects = () => {
       });
     }, sectionRef);
     return () => ctx.revert();
-  }, [loading]);
+  }, [loading, projects.length]);
 
   return (
     <section ref={sectionRef} className="py-24 px-6 relative z-10" id="projects">
@@ -165,6 +189,15 @@ export const Projects = () => {
           <h2 className="text-3xl font-bold text-foreground">Things I've Built</h2>
         </div>
 
+        {!loading && requestSource !== "network" && (
+          <ApiSectionNotice
+            errorMessage={errorMessage}
+            mode={requestSource === "cache" ? "cache" : "error"}
+            onRetry={() => setRequestVersion((value) => value + 1)}
+            sectionName="projects"
+          />
+        )}
+
         {loading ? (
           // 4 skeletons in the same 2-col grid — staggered pulse delay
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -174,8 +207,9 @@ export const Projects = () => {
           </div>
         ) : projects.length === 0 ? (
           <p className="text-sm text-muted-foreground font-mono">
-            No projects found — check{" "}
-            <code className="text-primary">/api/projects</code>.
+            {requestSource === "fallback"
+              ? "Projects are temporarily unavailable."
+              : "No projects found."}
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

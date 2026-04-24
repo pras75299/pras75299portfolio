@@ -1,11 +1,18 @@
 import Experience from "../models/Experience.js";
 import { validateExperience } from "../validators/experienceValidator.js";
+import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
 
 // Get all experiences
 export const getExperiences = async (req, res) => {
   try {
-    const experiences = await Experience.find().sort({ startDate: -1 });
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
+    const experiences = await Experience.find()
+      .sort({ startDate: -1 })
+      .select("title company startDate endDate current description technologies")
+      .lean();
+    setCollectionCacheHeaders(res, {
+      sMaxAge: 86400,
+      staleWhileRevalidate: 3600,
+    });
     res.json(experiences);
   } catch (error) {
     res.status(500).json({ message: error.message });

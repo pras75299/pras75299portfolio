@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-// @ts-ignore
 import dns from 'node:dns';
 
 // Fix Node ENOTFOUND issues by forcing IPv4 resolution first

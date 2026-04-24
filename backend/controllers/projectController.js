@@ -1,13 +1,17 @@
 import Project from "../models/Project.js";
 import { validateProject } from "../validators/projectValidator.js";
 import { uploadOnCloudinary } from "../middleware/cloudinary.js";
+import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
 import fs from "fs";
 
 // Get all projects
 export const getProjects = async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
-    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");
+    const projects = await Project.find()
+      .sort({ createdAt: -1 })
+      .select("title image technologies githubUrl liveUrl category")
+      .lean();
+    setCollectionCacheHeaders(res, { sMaxAge: 300, staleWhileRevalidate: 60 });
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -74,7 +74,7 @@ const WaveGrid = ({ scrollProgressRef, mouseRef, isDarkRef }: WaveGridProps) => 
       originalPositions: original,
       lineIndices: new Uint16Array(indices),
     };
-  }, []);
+  }, [count, gridSize, spacing]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;

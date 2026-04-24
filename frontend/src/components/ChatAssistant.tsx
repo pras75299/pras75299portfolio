@@ -92,14 +92,23 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Chat error:", error);
+
+      const responseError = axios.isAxiosError(error)
+        ? error.response?.data
+        : null;
+      const fallbackText =
+        typeof responseError === "object" &&
+        responseError !== null &&
+        "error" in responseError &&
+        typeof responseError.error === "string"
+          ? responseError.error
+          : "Sorry, I encountered an error. Please try again.";
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text:
-          error.response?.data?.error ||
-          "Sorry, I encountered an error. Please try again.",
+        text: fallbackText,
         sender: "assistant",
         timestamp: new Date().toISOString(),
       };
