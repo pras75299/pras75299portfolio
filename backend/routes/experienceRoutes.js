@@ -5,6 +5,7 @@ import {
   updateExperience,
   deleteExperience,
 } from "../controllers/experienceController.js";
+import { requireAdmin } from "../middleware/requireAdmin.js";
 
 const router = express.Router();
 
@@ -12,12 +13,12 @@ const router = express.Router();
 router.get("/", getExperiences);
 
 // Route: Create a new experience
-router.post("/", createExperience);
+router.post("/", requireAdmin, createExperience);
 
 // Route: Update an experience by ID
-router.put("/:id", updateExperience);
+router.put("/:id", requireAdmin, updateExperience);
 
 // Route: Delete an experience by ID
-router.delete("/:id", deleteExperience);
+router.delete("/:id", requireAdmin, deleteExperience);
 
 export default router;

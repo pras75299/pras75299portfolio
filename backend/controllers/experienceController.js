@@ -1,6 +1,8 @@
 import Experience from "../models/Experience.js";
 import { validateExperience } from "../validators/experienceValidator.js";
 import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
+import { getClientErrorResponse } from "../utils/clientError.js";
+import { logServerError, sendServerError } from "../utils/serverError.js";
 
 // Get all experiences
 export const getExperiences = async (req, res) => {
@@ -15,7 +17,8 @@ export const getExperiences = async (req, res) => {
     });
     res.json(experiences);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logServerError("Failed to fetch experiences", error);
+    sendServerError(res, "Unable to load experiences right now.");
   }
 };
 
@@ -30,7 +33,13 @@ export const createExperience = async (req, res) => {
     const savedExperience = await experience.save();
     res.status(201).json(savedExperience);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to create experience", error);
+    return sendServerError(res, "Unable to save the experience right now.");
   }
 };
 
@@ -52,7 +61,13 @@ export const updateExperience = async (req, res) => {
 
     res.json(experience);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to update experience", error);
+    return sendServerError(res, "Unable to update the experience right now.");
   }
 };
 
@@ -66,6 +81,12 @@ export const deleteExperience = async (req, res) => {
 
     res.json({ message: "Experience deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to delete experience", error);
+    return sendServerError(res, "Unable to delete the experience right now.");
   }
 };

@@ -1,30 +1,16 @@
-import Project from "../models/Project.js";
-import { validateProject } from "../validators/projectValidator.js";
-import { uploadOnCloudinary } from "../middleware/cloudinary.js";
-import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
 import fs from "fs";
+import Project from "../models/Project.js";
+import { uploadOnCloudinary } from "../middleware/cloudinary.js";
+import { getClientErrorResponse } from "../utils/clientError.js";
+import { hasAllowedImageSignature } from "../utils/imageFile.js";
+import { logServerError, sendServerError } from "../utils/serverError.js";
+import { validateProject } from "../validators/projectValidator.js";
 
-// Get all projects
-export const getProjects = async (req, res) => {
-  try {
-    const projects = await Project.find()
-      .sort({ createdAt: -1 })
-      .select("title image technologies githubUrl liveUrl category")
-      .lean();
-    setCollectionCacheHeaders(res, { sMaxAge: 300, staleWhileRevalidate: 60 });
-    res.json(projects);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Create a new project
 export const createProject = async (req, res) => {
   try {
     const { title, description, technologies, githubUrl, liveUrl, category } =
       req.body;
 
-    // Validate the project input
     const { error } = validateProject({ ...req.body, image: "placeholder" });
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
@@ -32,10 +18,18 @@ export const createProject = async (req, res) => {
 
     let imageUrl = null;
     if (req.file) {
+      const hasValidSignature = await hasAllowedImageSignature(req.file.path);
+      if (!hasValidSignature) {
+        await fs.promises.unlink(req.file.path).catch(console.error);
+        return res.status(400).json({
+          message: "Uploaded files must contain a valid image.",
+        });
+      }
+
       const response = await uploadOnCloudinary(req.file.path);
       if (response) {
         imageUrl = response.url;
-        await fs.promises.unlink(req.file.path).catch(console.error); // Remove local file
+        await fs.promises.unlink(req.file.path).catch(console.error);
       } else {
         return res
           .status(500)
@@ -56,18 +50,23 @@ export const createProject = async (req, res) => {
     const savedProject = await project.save();
     res.status(201).json(savedProject);
   } catch (error) {
-    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error); // Clean up file on error
-    res.status(500).json({ message: error.message });
+    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error);
+
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to create project", error);
+    return sendServerError(res, "Unable to save the project right now.");
   }
 };
 
-// Update an existing project
 export const updateProject = async (req, res) => {
   try {
     const { title, description, technologies, githubUrl, liveUrl, category } =
       req.body;
 
-    // Validate the project input
     const { error } = validateProject({ ...req.body, image: "placeholder" });
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
@@ -75,10 +74,18 @@ export const updateProject = async (req, res) => {
 
     let imageUrl = null;
     if (req.file) {
+      const hasValidSignature = await hasAllowedImageSignature(req.file.path);
+      if (!hasValidSignature) {
+        await fs.promises.unlink(req.file.path).catch(console.error);
+        return res.status(400).json({
+          message: "Uploaded files must contain a valid image.",
+        });
+      }
+
       const response = await uploadOnCloudinary(req.file.path);
       if (response) {
         imageUrl = response.url;
-        await fs.promises.unlink(req.file.path).catch(console.error); // Remove local file
+        await fs.promises.unlink(req.file.path).catch(console.error);
       } else {
         return res
           .status(500)
@@ -97,30 +104,43 @@ export const updateProject = async (req, res) => {
 
     if (imageUrl) updatedData.image = imageUrl;
 
-    const project = await Project.findByIdAndUpdate(
-      req.params.id,
-      updatedData,
-      { new: true }
-    );
+    const project = await Project.findByIdAndUpdate(req.params.id, updatedData, {
+      new: true,
+    });
 
-    if (!project)
+    if (!project) {
       return res.status(404).json({ message: "Project not found." });
+    }
 
     res.json(project);
   } catch (error) {
-    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error); // Clean up file on error
-    res.status(500).json({ message: error.message });
+    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error);
+
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to update project", error);
+    return sendServerError(res, "Unable to update the project right now.");
   }
 };
 
-// Delete a project
 export const deleteProject = async (req, res) => {
   try {
     const project = await Project.findByIdAndDelete(req.params.id);
-    if (!project)
+    if (!project) {
       return res.status(404).json({ message: "Project not found." });
+    }
+
     res.json({ message: "Project deleted successfully." });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to delete project", error);
+    return sendServerError(res, "Unable to delete the project right now.");
   }
 };

@@ -5,6 +5,7 @@ import {
   updateSkill,
   deleteSkill,
 } from "../controllers/skillController.js";
+import { requireAdmin } from "../middleware/requireAdmin.js";
 
 const router = express.Router();
 
@@ -12,12 +13,12 @@ const router = express.Router();
 router.get("/", getSkills);
 
 // Route: Create a new skill
-router.post("/", createSkill);
+router.post("/", requireAdmin, createSkill);
 
 // Route: Update a skill by ID
-router.put("/:id", updateSkill);
+router.put("/:id", requireAdmin, updateSkill);
 
 // Route: Delete a skill by ID
-router.delete("/:id", deleteSkill);
+router.delete("/:id", requireAdmin, deleteSkill);
 
 export default router;

@@ -5,8 +5,15 @@ export const validateMessage = (message) => {
     name: Joi.string().required().trim(),
     email: Joi.string().email().required().trim().lowercase(),
     message: Joi.string().required(),
-    status: Joi.string().valid("unread", "read", "replied").default("unread"),
   });
 
   return schema.validate(message);
+};
+
+export const validateMessageStatus = (payload) => {
+  const schema = Joi.object({
+    status: Joi.string().valid("unread", "read", "replied").required(),
+  });
+
+  return schema.validate(payload);
 };

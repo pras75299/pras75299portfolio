@@ -1,18 +1,38 @@
-import OpenAI from "openai";
 import Experience from "../models/Experience.js";
 import Project from "../models/Project.js";
 import Skill from "../models/Skill.js";
+import { logServerError } from "../utils/serverError.js";
 import { validateChatMessage } from "../validators/chatValidator.js";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // In-memory cache for portfolio context (5-minute TTL)
 let portfolioCache = null;
 let portfolioCacheExpiry = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+let openAIClient = null;
+let openAIClientPending = null;
+
+const getOpenAIClient = async () => {
+  if (openAIClient) {
+    return openAIClient;
+  }
+
+  if (!openAIClientPending) {
+    openAIClientPending = import("openai")
+      .then(({ default: OpenAI }) => {
+        openAIClient = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        return openAIClient;
+      })
+      .catch((error) => {
+        openAIClientPending = null;
+        throw error;
+      });
+  }
+
+  return openAIClientPending;
+};
 
 // Calculate total experience duration
 const calculateTotalExperience = (experiences) => {
@@ -236,7 +256,8 @@ export const chatWithAssistant = async (req, res) => {
     const systemPrompt = createSystemPrompt(portfolioData);
 
     // Call OpenAI API
-    const completion = await openai.chat.completions.create({
+    const openAI = await getOpenAIClient();
+    const completion = await openAI.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -265,24 +286,10 @@ export const chatWithAssistant = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Chat error:", error);
+    logServerError("Chat error", error);
 
-    if (error.code === "insufficient_quota") {
-      return res.status(402).json({
-        error:
-          "OpenAI API quota exceeded. Please check your API key and billing.",
-      });
-    }
-
-    if (error.code === "invalid_api_key") {
-      return res.status(401).json({
-        error:
-          "Invalid OpenAI API key. Please check your environment variables.",
-      });
-    }
-
-    res.status(500).json({
-      error: "An error occurred while processing your request",
+    res.status(503).json({
+      error: "The assistant is temporarily unavailable.",
     });
   }
 };

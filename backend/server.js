@@ -6,25 +6,12 @@ import rateLimit from "express-rate-limit";
 import { config } from "dotenv";
 import { connectDB } from "./config/database.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import projectRoutes from "./routes/projectRoutes.js";
-import messageRoutes from "./routes/messageRoutes.js";
-import experienceRoutes from "./routes/experienceRoutes.js";
-import skillRoutes from "./routes/skillRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js";
+import { lazyRoute } from "./utils/lazyRoute.js";
 
 config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-
-// Connect to MongoDB (handle errors gracefully for serverless)
-connectDB().catch((error) => {
-  console.error("MongoDB connection error:", error);
-  // Don't exit in serverless environment
-  if (process.env.VERCEL !== "1") {
-    process.exit(1);
-  }
-});
 
 // Rate limiter
 const limiter = rateLimit({
@@ -95,11 +82,11 @@ app.use("/api", async (req, res, next) => {
 });
 
 // Routes
-app.use("/api/projects", projectRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/experiences", experienceRoutes);
-app.use("/api/skills", skillRoutes);
-app.use("/api/chat", chatRoutes);
+app.use("/api/projects", lazyRoute(() => import("./routes/projectRoutes.js")));
+app.use("/api/messages", lazyRoute(() => import("./routes/messageRoutes.js")));
+app.use("/api/experiences", lazyRoute(() => import("./routes/experienceRoutes.js")));
+app.use("/api/skills", lazyRoute(() => import("./routes/skillRoutes.js")));
+app.use("/api/chat", lazyRoute(() => import("./routes/chatRoutes.js")));
 
 // Health check route
 app.get("/health", (req, res) => {
@@ -126,6 +113,10 @@ app.use(errorHandler);
 if (process.env.VERCEL !== "1") {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    void connectDB().catch((error) => {
+      console.error("MongoDB connection error:", error);
+      process.exit(1);
+    });
   });
 }
 

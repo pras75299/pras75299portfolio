@@ -1,30 +1,70 @@
 import express from "express";
-import multer from "multer";
-import {
-  getProjects,
-  createProject,
-  updateProject,
-  deleteProject,
-} from "../controllers/projectController.js";
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+let readRouter = null;
+let readRouterPending = null;
+let writeRouter = null;
+let writeRouterPending = null;
+
+const loadReadRouter = async () => {
+  if (readRouter) {
+    return readRouter;
+  }
+
+  if (!readRouterPending) {
+    readRouterPending = import("./projectReadRoutes.js")
+      .then((module) => module.default)
+      .then((loadedRouter) => {
+        readRouter = loadedRouter;
+        return loadedRouter;
+      })
+      .catch((error) => {
+        readRouterPending = null;
+        throw error;
+      });
+  }
+
+  return readRouterPending;
+};
+
+const loadWriteRouter = async () => {
+  if (writeRouter) {
+    return writeRouter;
+  }
+
+  if (!writeRouterPending) {
+    writeRouterPending = import("./projectWriteRoutes.js")
+      .then((module) => module.default)
+      .then((loadedRouter) => {
+        writeRouter = loadedRouter;
+        return loadedRouter;
+      })
+      .catch((error) => {
+        writeRouterPending = null;
+        throw error;
+      });
+  }
+
+  return writeRouterPending;
+};
+
+router.use(async (req, res, next) => {
+  try {
+    if (req.method === "GET" || req.method === "HEAD") {
+      const loadedRouter = await loadReadRouter();
+      return loadedRouter(req, res, next);
+    }
+
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+      const loadedRouter = await loadWriteRouter();
+      return loadedRouter(req, res, next);
+    }
+
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 });
-
-const upload = multer({ storage });
-
-// Routes
-router.get("/", getProjects);
-router.post("/", upload.single("image"), createProject);
-router.put("/:id", upload.single("image"), updateProject);
-router.delete("/:id", deleteProject);
 
 export default router;

@@ -1,6 +1,8 @@
 import Skill from "../models/Skill.js";
 import { validateSkill } from "../validators/skillValidator.js";
 import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
+import { getClientErrorResponse } from "../utils/clientError.js";
+import { logServerError, sendServerError } from "../utils/serverError.js";
 
 export const getSkills = async (req, res) => {
   try {
@@ -14,7 +16,8 @@ export const getSkills = async (req, res) => {
     });
     res.json(skills);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logServerError("Failed to fetch skills", error);
+    sendServerError(res, "Unable to load skills right now.");
   }
 };
 
@@ -28,7 +31,13 @@ export const createSkill = async (req, res) => {
     const savedSkill = await skill.save();
     res.status(201).json(savedSkill);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to create skill", error);
+    return sendServerError(res, "Unable to save the skill right now.");
   }
 };
 
@@ -46,7 +55,13 @@ export const updateSkill = async (req, res) => {
 
     res.json(skill);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to update skill", error);
+    return sendServerError(res, "Unable to update the skill right now.");
   }
 };
 
@@ -57,6 +72,12 @@ export const deleteSkill = async (req, res) => {
 
     res.json({ message: "Skill deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const clientError = getClientErrorResponse(error);
+    if (clientError) {
+      return res.status(clientError.status).json({ message: clientError.message });
+    }
+
+    logServerError("Failed to delete skill", error);
+    return sendServerError(res, "Unable to delete the skill right now.");
   }
 };
