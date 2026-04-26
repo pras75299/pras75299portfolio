@@ -345,22 +345,24 @@ export const __setOpenAIClientForTests = (client) => {
 // Chat endpoint
 export const chatWithAssistant = async (req, res) => {
   try {
-    // Check if body exists
-    if (!req.body || typeof req.body !== "object") {
-      return res.status(400).json({
-        error: "Request body is required and must be a JSON object",
-      });
-    }
+    let message = req.validatedChatRequest?.message;
 
-    // Validate input
-    const { error, value } = validateChatMessage(req.body);
-    if (error) {
-      return res.status(400).json({
-        error: error.details[0].message,
-      });
-    }
+    if (!message) {
+      if (!req.body || typeof req.body !== "object") {
+        return res.status(400).json({
+          error: "Request body is required and must be a JSON object",
+        });
+      }
 
-    const { message } = value;
+      const { error, value } = validateChatMessage(req.body);
+      if (error) {
+        return res.status(400).json({
+          error: error.details[0].message,
+        });
+      }
+
+      message = value.message;
+    }
 
     const [portfolioData, openAI] = await Promise.all([
       getPortfolioContext(),
