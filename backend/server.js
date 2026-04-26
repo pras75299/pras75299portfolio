@@ -19,9 +19,10 @@ const isTestEnvironment = process.env.NODE_ENV === "test";
 
 export const createApp = ({
   connectDBImpl = connectDB,
-  warmupOnBoot = process.env.VERCEL === "1",
+  warmupOnBoot = process.env.DB_WARMUP_ON_BOOT === "1",
 } = {}) => {
   const app = express();
+  app.locals.connectDB = connectDBImpl;
 
   // Rate limiter
   const limiter = rateLimit({
@@ -80,19 +81,7 @@ export const createApp = ({
     next();
   });
 
-  // Ensure DB is connected before every API request (critical for serverless cold starts)
-  app.use("/api", async (req, res, next) => {
-    try {
-      await connectDBImpl();
-      next();
-    } catch (error) {
-      console.error("DB connection failed on request:", error.message);
-      res.status(503).json({ message: "Database unavailable" });
-    }
-  });
-
-  // Start the DB connection during cold starts so the first API request can
-  // reuse the in-flight promise instead of beginning from zero.
+  // Optional DB warmup for environments that prefer eager initialization.
   if (warmupOnBoot) {
     void connectDBImpl().catch((error) => {
       console.error("Background DB warmup failed:", error.message);

@@ -8,6 +8,7 @@ import {
   updateProject,
   deleteProject,
 } from "../controllers/projectWriteController.js";
+import { ensureDbConnection } from "../middleware/ensureDbConnection.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 
 const router = express.Router();
@@ -67,6 +68,7 @@ const handleProjectUpload = (req, res, next) => {
 };
 
 router.use(requireAdmin);
+router.use(ensureDbConnection);
 router.post("/", handleProjectUpload, createProject);
 router.put("/:id", handleProjectUpload, updateProject);
 router.delete("/:id", deleteProject);
