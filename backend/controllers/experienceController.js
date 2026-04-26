@@ -1,6 +1,6 @@
 import Experience from "../models/Experience.js";
 import { validateExperience } from "../validators/experienceValidator.js";
-import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
+import { setPortfolioReadCacheHeaders } from "../utils/cacheHeaders.js";
 import { getClientErrorResponse } from "../utils/clientError.js";
 import { logServerError, sendServerError } from "../utils/serverError.js";
 
@@ -11,10 +11,7 @@ export const getExperiences = async (req, res) => {
       .sort({ startDate: -1 })
       .select("title company startDate endDate current description technologies")
       .lean();
-    setCollectionCacheHeaders(res, {
-      sMaxAge: 86400,
-      staleWhileRevalidate: 3600,
-    });
+    setPortfolioReadCacheHeaders(res);
     res.json(experiences);
   } catch (error) {
     logServerError("Failed to fetch experiences", error);

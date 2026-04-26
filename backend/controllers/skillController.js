@@ -1,6 +1,6 @@
 import Skill from "../models/Skill.js";
 import { validateSkill } from "../validators/skillValidator.js";
-import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
+import { setPortfolioReadCacheHeaders } from "../utils/cacheHeaders.js";
 import { getClientErrorResponse } from "../utils/clientError.js";
 import { logServerError, sendServerError } from "../utils/serverError.js";
 
@@ -10,10 +10,7 @@ export const getSkills = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("name icon")
       .lean();
-    setCollectionCacheHeaders(res, {
-      sMaxAge: 86400,
-      staleWhileRevalidate: 3600,
-    });
+    setPortfolioReadCacheHeaders(res);
     res.json(skills);
   } catch (error) {
     logServerError("Failed to fetch skills", error);

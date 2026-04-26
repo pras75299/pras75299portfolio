@@ -1,5 +1,5 @@
 import Project from "../models/Project.js";
-import { setCollectionCacheHeaders } from "../utils/cacheHeaders.js";
+import { setPortfolioReadCacheHeaders } from "../utils/cacheHeaders.js";
 import { logServerError, sendServerError } from "../utils/serverError.js";
 
 export const getProjects = async (req, res) => {
@@ -9,7 +9,7 @@ export const getProjects = async (req, res) => {
       .select("title image technologies githubUrl liveUrl category")
       .lean();
 
-    setCollectionCacheHeaders(res, { sMaxAge: 300, staleWhileRevalidate: 60 });
+    setPortfolioReadCacheHeaders(res);
     res.json(projects);
   } catch (error) {
     logServerError("Failed to fetch projects", error);

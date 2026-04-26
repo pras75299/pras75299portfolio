@@ -15,3 +15,11 @@ export const setCollectionCacheHeaders = (
   res.setHeader("CDN-Cache-Control", sharedCacheValue);
   res.setHeader("Vercel-CDN-Cache-Control", sharedCacheValue);
 };
+
+export const setPortfolioReadCacheHeaders = (res) => {
+  setCollectionCacheHeaders(res, {
+    browserMaxAge: 0,
+    sMaxAge: 86400,
+    staleWhileRevalidate: 3600,
+  });
+};
