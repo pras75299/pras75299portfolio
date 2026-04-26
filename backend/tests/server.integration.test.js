@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import { after, afterEach, beforeEach, test } from "node:test";
 import Project from "../models/Project.js";
 import Experience from "../models/Experience.js";
@@ -12,13 +13,21 @@ import { dispatchHttpRequest } from "./helpers/httpServer.js";
 const originalEnv = {
   NODE_ENV: process.env.NODE_ENV,
   VERCEL: process.env.VERCEL,
-  ADMIN_API_TOKEN: process.env.ADMIN_API_TOKEN,
+  ADMIN_API_KEY_ID: process.env.ADMIN_API_KEY_ID,
+  ADMIN_API_SECRET: process.env.ADMIN_API_SECRET,
+  ADMIN_API_SECONDARY_KEY_ID: process.env.ADMIN_API_SECONDARY_KEY_ID,
+  ADMIN_API_SECONDARY_SECRET: process.env.ADMIN_API_SECONDARY_SECRET,
+  ADMIN_API_SIGNATURE_TTL_SECONDS: process.env.ADMIN_API_SIGNATURE_TTL_SECONDS,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 };
 
 process.env.NODE_ENV = "test";
 process.env.VERCEL = "0";
-process.env.ADMIN_API_TOKEN = "integration-admin-token";
+process.env.ADMIN_API_KEY_ID = "integration-admin-primary";
+process.env.ADMIN_API_SECRET = "integration-admin-primary-secret";
+process.env.ADMIN_API_SECONDARY_KEY_ID = "";
+process.env.ADMIN_API_SECONDARY_SECRET = "";
+process.env.ADMIN_API_SIGNATURE_TTL_SECONDS = "300";
 process.env.OPENAI_API_KEY = "test-openai-key";
 
 const { createApp } = await import("../server.js");
@@ -30,6 +39,42 @@ const originalFinders = {
 };
 
 const cloneData = (value) => JSON.parse(JSON.stringify(value));
+
+const createRequestPayload = (body) =>
+  body === undefined
+    ? null
+    : Buffer.isBuffer(body)
+      ? body
+      : Buffer.from(typeof body === "string" ? body : JSON.stringify(body), "utf8");
+
+const createAdminAuthorizationHeader = ({
+  body,
+  contentLength,
+  contentType,
+  keyId = process.env.ADMIN_API_KEY_ID,
+  method = "POST",
+  path,
+  secret = process.env.ADMIN_API_SECRET,
+  timestamp = Math.floor(Date.now() / 1000),
+} = {}) => {
+  const payload = createRequestPayload(body);
+  const normalizedContentType = contentType ?? (payload ? "application/json" : "");
+  const normalizedContentLength =
+    contentLength ?? (payload ? String(payload.length) : "");
+  const signingPayload = [
+    method.toUpperCase(),
+    path,
+    String(timestamp),
+    normalizedContentType,
+    normalizedContentLength,
+  ].join("\n");
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(signingPayload)
+    .digest("hex");
+
+  return `AdminHMAC ${keyId}:${timestamp}:${signature}`;
+};
 
 const createMultipartFormData = (fields = [], files = []) => {
   const boundary = `----portfolio-test-${Date.now()}`;
@@ -102,7 +147,11 @@ const createDbTracker = ({ shouldFail = false } = {}) => {
 };
 
 beforeEach(() => {
-  process.env.ADMIN_API_TOKEN = "integration-admin-token";
+  process.env.ADMIN_API_KEY_ID = "integration-admin-primary";
+  process.env.ADMIN_API_SECRET = "integration-admin-primary-secret";
+  process.env.ADMIN_API_SECONDARY_KEY_ID = "";
+  process.env.ADMIN_API_SECONDARY_SECRET = "";
+  process.env.ADMIN_API_SIGNATURE_TTL_SECONDS = "300";
   process.env.OPENAI_API_KEY = "test-openai-key";
   Project.find = originalFinders.projectFind;
   Experience.find = originalFinders.experienceFind;
@@ -120,7 +169,12 @@ afterEach(() => {
 after(() => {
   process.env.NODE_ENV = originalEnv.NODE_ENV;
   process.env.VERCEL = originalEnv.VERCEL;
-  process.env.ADMIN_API_TOKEN = originalEnv.ADMIN_API_TOKEN;
+  process.env.ADMIN_API_KEY_ID = originalEnv.ADMIN_API_KEY_ID;
+  process.env.ADMIN_API_SECRET = originalEnv.ADMIN_API_SECRET;
+  process.env.ADMIN_API_SECONDARY_KEY_ID = originalEnv.ADMIN_API_SECONDARY_KEY_ID;
+  process.env.ADMIN_API_SECONDARY_SECRET = originalEnv.ADMIN_API_SECONDARY_SECRET;
+  process.env.ADMIN_API_SIGNATURE_TTL_SECONDS =
+    originalEnv.ADMIN_API_SIGNATURE_TTL_SECONDS;
   process.env.OPENAI_API_KEY = originalEnv.OPENAI_API_KEY;
 });
 
@@ -135,6 +189,43 @@ test("health and root routes bypass the API DB gate", async () => {
   assert.equal(root.status, 200);
   assert.equal(root.text, "Backend working fine");
   assert.equal(db.calls.length, 0);
+});
+
+test("rate limiting respects forwarded client IPs behind the Vercel proxy", async () => {
+  const previousVercel = process.env.VERCEL;
+  process.env.VERCEL = "1";
+
+  try {
+    const db = createDbTracker();
+    const app = createApp({
+      connectDBImpl: db.connectDBImpl,
+      rateLimitOptions: {
+        max: 1,
+        windowMs: 15 * 60 * 1000,
+      },
+      warmupOnBoot: false,
+    });
+
+    const firstClientRequest = await dispatchHttpRequest(app, {
+      headers: { "x-forwarded-for": "203.0.113.10" },
+      path: "/health",
+    });
+    const repeatedClientRequest = await dispatchHttpRequest(app, {
+      headers: { "x-forwarded-for": "203.0.113.10" },
+      path: "/health",
+    });
+    const secondClientRequest = await dispatchHttpRequest(app, {
+      headers: { "x-forwarded-for": "203.0.113.11" },
+      path: "/health",
+    });
+
+    assert.equal(firstClientRequest.status, 200);
+    assert.equal(repeatedClientRequest.status, 429);
+    assert.equal(secondClientRequest.status, 200);
+    assert.equal(db.calls.length, 0);
+  } finally {
+    process.env.VERCEL = previousVercel;
+  }
 });
 
 test("mounted public read routes return data and cache headers", async () => {
@@ -313,7 +404,7 @@ test("admin-protected mounted write routes reject missing or unconfigured auth",
   assert.equal(unauthorizedProject.status, 401);
   assert.deepEqual(unauthorizedSkill.body, { message: "Unauthorized" });
 
-  process.env.ADMIN_API_TOKEN = "";
+  process.env.ADMIN_API_SECRET = "";
   const unavailableAdmin = await dispatchHttpRequest(app, {
     body: { name: "Node.js", icon: "node" },
     method: "POST",
@@ -352,7 +443,12 @@ test("invalid project uploads return 400 before opening a DB connection", async 
   const response = await dispatchHttpRequest(app, {
     body: multipart.body,
     headers: {
-      authorization: "Bearer integration-admin-token",
+      authorization: createAdminAuthorizationHeader({
+        body: multipart.body,
+        contentType: multipart.contentType,
+        method: "POST",
+        path: "/api/projects",
+      }),
       "content-type": multipart.contentType,
     },
     method: "POST",

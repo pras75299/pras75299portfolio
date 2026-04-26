@@ -16,6 +16,7 @@ config();
 const PORT = process.env.PORT || 8080;
 const JSON_BODY_LIMIT = "256kb";
 const isTestEnvironment = process.env.NODE_ENV === "test";
+
 const resolveWarmupOnBoot = () => {
   if (process.env.DB_WARMUP_ON_BOOT === "1") {
     return true;
@@ -28,17 +29,29 @@ const resolveWarmupOnBoot = () => {
   return process.env.VERCEL === "1";
 };
 
+const resolveTrustProxy = () => {
+  if (process.env.VERCEL === "1") {
+    return 1;
+  }
+
+  return false;
+};
+
 export const createApp = ({
   connectDBImpl = connectDB,
+  rateLimitOptions = {},
+  trustProxy = resolveTrustProxy(),
   warmupOnBoot = resolveWarmupOnBoot(),
 } = {}) => {
   const app = express();
   app.locals.connectDB = connectDBImpl;
+  app.set("trust proxy", trustProxy);
 
   // Rate limiter
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
+    ...rateLimitOptions,
   });
 
   // Middleware
