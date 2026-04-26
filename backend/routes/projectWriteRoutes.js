@@ -68,9 +68,8 @@ const handleProjectUpload = (req, res, next) => {
 };
 
 router.use(requireAdmin);
-router.use(ensureDbConnection);
-router.post("/", handleProjectUpload, createProject);
-router.put("/:id", handleProjectUpload, updateProject);
-router.delete("/:id", deleteProject);
+router.post("/", handleProjectUpload, ensureDbConnection, createProject);
+router.put("/:id", handleProjectUpload, ensureDbConnection, updateProject);
+router.delete("/:id", ensureDbConnection, deleteProject);
 
 export default router;
