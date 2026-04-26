@@ -10,10 +10,53 @@ let portfolioCacheExpiry = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 let openAIClient = null;
 let openAIClientPending = null;
+const NOT_SPECIFIED = "Not specified";
+const UNKNOWN_START_DATE = "Unknown start date";
+const UNKNOWN_END_DATE = "Unknown end date";
+const DEFAULT_TOTAL_EXPERIENCE = "No experience data available";
+
+const toValidDate = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatPromptDate = (value, fallback) => {
+  const date = toValidDate(value);
+  return date ? date.toISOString().split("T")[0] : fallback;
+};
+
+const formatText = (value, fallback = NOT_SPECIFIED) => {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  return trimmed || fallback;
+};
+
+const formatList = (value, fallback = NOT_SPECIFIED) => {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+
+  const items = value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter(Boolean);
+
+  return items.length > 0 ? items.join(", ") : fallback;
+};
 
 const getOpenAIClient = async () => {
   if (openAIClient) {
     return openAIClient;
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Missing OPENAI_API_KEY");
   }
 
   if (!openAIClientPending) {
@@ -37,14 +80,26 @@ const getOpenAIClient = async () => {
 // Calculate total experience duration
 const calculateTotalExperience = (experiences) => {
   if (!experiences || experiences.length === 0) {
-    return "No experience data available";
+    return DEFAULT_TOTAL_EXPERIENCE;
   }
 
-  // Find the earliest start date
-  const sortedExperiences = [...experiences].sort(
-    (a, b) => new Date(a.startDate) - new Date(b.startDate)
-  );
-  const firstJobStartDate = new Date(sortedExperiences[0].startDate);
+  let firstJobStartDate = null;
+
+  for (const experience of experiences) {
+    const startDate = toValidDate(experience?.startDate);
+    if (!startDate) {
+      continue;
+    }
+
+    if (!firstJobStartDate || startDate < firstJobStartDate) {
+      firstJobStartDate = startDate;
+    }
+  }
+
+  if (!firstJobStartDate) {
+    return DEFAULT_TOTAL_EXPERIENCE;
+  }
+
   const currentDate = new Date();
 
   // Calculate the difference in months
@@ -81,31 +136,136 @@ const getPortfolioContext = async () => {
 
   try {
     const [experiences, projects, skills] = await Promise.all([
-      Experience.find().sort({ startDate: -1 }).lean(),
-      Project.find().sort({ createdAt: -1 }).lean(),
-      Skill.find().sort({ category: 1 }).lean(),
+      Experience.find(
+        {},
+        "title company location startDate endDate current description technologies"
+      )
+        .sort({ startDate: -1 })
+        .lean(),
+      Project.find(
+        {},
+        "title description technologies category githubUrl liveUrl"
+      )
+        .sort({ createdAt: -1 })
+        .lean(),
+      Skill.find({}, "name category proficiency").sort({ category: 1 }).lean(),
     ]);
 
     // Calculate total experience
     const totalExperience = calculateTotalExperience(experiences);
 
-    portfolioCache = { experiences, projects, skills, totalExperience };
+    portfolioCache = {
+      experiences,
+      projects,
+      skills,
+      totalExperience,
+      systemPrompt: createSystemPrompt({
+        experiences,
+        projects,
+        skills,
+        totalExperience,
+      }),
+    };
     portfolioCacheExpiry = now + CACHE_TTL_MS;
     return portfolioCache;
   } catch (error) {
     console.error("Error fetching portfolio data:", error);
-    return {
+    const fallbackContext = {
       experiences: [],
       projects: [],
       skills: [],
       totalExperience: "Unable to calculate",
     };
+
+    return {
+      ...fallbackContext,
+      systemPrompt: createSystemPrompt(fallbackContext),
+    };
   }
 };
 
 // Create system prompt with portfolio context
-const createSystemPrompt = (portfolioData) => {
-  const { experiences, projects, skills, totalExperience } = portfolioData;
+export const createSystemPrompt = (portfolioData = {}) => {
+  const experiences = Array.isArray(portfolioData.experiences)
+    ? portfolioData.experiences
+    : [];
+  const projects = Array.isArray(portfolioData.projects)
+    ? portfolioData.projects
+    : [];
+  const skills = Array.isArray(portfolioData.skills) ? portfolioData.skills : [];
+  const totalExperience =
+    portfolioData.totalExperience || DEFAULT_TOTAL_EXPERIENCE;
+
+  const experienceLines = experiences
+    .map((exp, index) => {
+      const current = Boolean(exp?.current);
+      const startDate = formatPromptDate(exp?.startDate, UNKNOWN_START_DATE);
+      const endDate = current
+        ? "Present"
+        : formatPromptDate(exp?.endDate, UNKNOWN_END_DATE);
+
+      return `
+${index + 1}. ${formatText(exp?.title)} at ${formatText(exp?.company)}
+   - Location: ${formatText(exp?.location)}
+   - Duration: ${startDate} to ${endDate}
+   - Current Position: ${current ? "Yes" : "No"}
+   - Key Responsibilities: ${formatList(exp?.description)}
+   - Technologies Used: ${formatList(exp?.technologies)}
+`;
+    })
+    .join("");
+
+  const projectLines = projects
+    .map(
+      (project, index) => `
+${index + 1}. ${formatText(project?.title)}
+   - Description: ${formatText(project?.description)}
+   - Technologies: ${formatList(project?.technologies)}
+   - Category: ${formatText(project?.category)}
+   - GitHub Repository: ${formatText(project?.githubUrl)}
+   - Live Demo: ${formatText(project?.liveUrl)}
+`
+    )
+    .join("");
+
+  const skillsByCategory = skills.reduce((acc, skill) => {
+    const category = formatText(skill?.category);
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+
+    acc[category].push(skill);
+    return acc;
+  }, {});
+
+  const skillLines = Object.entries(skillsByCategory)
+    .map(
+      ([category, categorySkills]) => `
+${category}:
+${categorySkills
+  .sort((a, b) => (b?.proficiency ?? 0) - (a?.proficiency ?? 0))
+  .map(
+    (skill) =>
+      `   - ${formatText(skill?.name)}: ${
+        Number.isFinite(skill?.proficiency) ? skill.proficiency : 0
+      }%`
+  )
+  .join("\n")}
+`
+    )
+    .join("");
+
+  const currentExperience = experiences.find((exp) => exp?.current);
+  const highlightedSkills = skills
+    .filter((skill) => Number(skill?.proficiency) >= 80)
+    .map((skill) => formatText(skill?.name))
+    .filter((name, index, items) => name !== NOT_SPECIFIED && items.indexOf(name) === index)
+    .join(", ");
+  const notableProjects = projects
+    .slice(0, 2)
+    .map((project) => formatText(project?.title))
+    .filter((title) => title !== NOT_SPECIFIED)
+    .join(", ");
 
   let context = `You are a personal assistant for a software developer's portfolio. You can ONLY answer questions about the developer's experience, projects, and skills. You must NOT answer questions about anything else.
 
@@ -114,74 +274,22 @@ Here is the developer's information:
 TOTAL EXPERIENCE: ${totalExperience} (calculated from first job start date to current date)
 
 EXPERIENCES (in chronological order):
-${experiences
-  .map(
-    (exp, index) => `
-${index + 1}. ${exp.title} at ${exp.company}
-   - Location: ${exp.location}
-   - Duration: ${exp.startDate.toISOString().split("T")[0]} to ${
-      exp.current ? "Present" : exp.endDate.toISOString().split("T")[0]
-    }
-   - Current Position: ${exp.current ? "Yes" : "No"}
-   - Key Responsibilities: ${exp.description.join(", ")}
-   - Technologies Used: ${exp.technologies.join(", ")}
-`
-  )
-  .join("")}
+${experienceLines}
 
 PROJECTS (with details):
-${projects
-  .map(
-    (project, index) => `
-${index + 1}. ${project.title}
-   - Description: ${project.description}
-   - Technologies: ${project.technologies.join(", ")}
-   - Category: ${project.category}
-   - GitHub Repository: ${project.githubUrl}
-   - Live Demo: ${project.liveUrl}
-`
-  )
-  .join("")}
+${projectLines}
 
 SKILLS (organized by category):
-${Object.entries(
-  skills.reduce((acc, skill) => {
-    if (!acc[skill.category]) {
-      acc[skill.category] = [];
-    }
-    acc[skill.category].push(skill);
-    return acc;
-  }, {})
-)
-  .map(
-    ([category, categorySkills]) => `
-${category}:
-${categorySkills
-  .sort((a, b) => b.proficiency - a.proficiency)
-  .map((skill) => `   - ${skill.name}: ${skill.proficiency}%`)
-  .join("\n")}
-`
-  )
-  .join("")}
+${skillLines}
 
 SUMMARY FORMAT FOR "TELL ME ABOUT PRASHANT" REQUESTS:
 When asked for a summary about Prashant, structure your response to include:
 - Professional experience duration: ${totalExperience}
 - Current role: ${
-    experiences.find((exp) => exp.current)?.title || "Not specified"
-  } at ${experiences.find((exp) => exp.current)?.company || "Not specified"}
-- Key technologies: ${
-    skills
-      .filter((skill) => skill.proficiency >= 80)
-      .map((skill) => skill.name)
-      .join(", ") || "Various technologies"
-  }
-- Notable projects: ${
-    projects
-      .slice(0, 2)
-      .map((project) => project.title)
-      .join(", ") || "Multiple projects"
-  }
+    formatText(currentExperience?.title)
+  } at ${formatText(currentExperience?.company)}
+- Key technologies: ${highlightedSkills || "Various technologies"}
+- Notable projects: ${notableProjects || "Multiple projects"}
 - Professional focus: Full-stack development, modern web technologies, and innovative solutions
 
 IMPORTANT RULES:
@@ -220,17 +328,23 @@ COMMON PORTFOLIO QUESTIONS YOU CAN ANSWER:
   return context;
 };
 
+export const calculatePortfolioTotalExperience = calculateTotalExperience;
+
+export const __resetChatControllerStateForTests = () => {
+  portfolioCache = null;
+  portfolioCacheExpiry = 0;
+  openAIClient = null;
+  openAIClientPending = null;
+};
+
+export const __setOpenAIClientForTests = (client) => {
+  openAIClient = client;
+  openAIClientPending = null;
+};
+
 // Chat endpoint
 export const chatWithAssistant = async (req, res) => {
   try {
-    // Debug logging
-    console.log("Chat request received:", {
-      body: req.body,
-      bodyType: typeof req.body,
-      bodyKeys: req.body ? Object.keys(req.body) : "no body",
-      headers: req.headers["content-type"],
-    });
-
     // Check if body exists
     if (!req.body || typeof req.body !== "object") {
       return res.status(400).json({
@@ -241,7 +355,6 @@ export const chatWithAssistant = async (req, res) => {
     // Validate input
     const { error, value } = validateChatMessage(req.body);
     if (error) {
-      console.log("Validation error:", error.details);
       return res.status(400).json({
         error: error.details[0].message,
       });
@@ -249,14 +362,15 @@ export const chatWithAssistant = async (req, res) => {
 
     const { message } = value;
 
-    // Get portfolio data for context
-    const portfolioData = await getPortfolioContext();
+    const [portfolioData, openAI] = await Promise.all([
+      getPortfolioContext(),
+      getOpenAIClient(),
+    ]);
 
     // Create system prompt
-    const systemPrompt = createSystemPrompt(portfolioData);
+    const systemPrompt =
+      portfolioData.systemPrompt || createSystemPrompt(portfolioData);
 
-    // Call OpenAI API
-    const openAI = await getOpenAIClient();
     const completion = await openAI.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [

@@ -6,21 +6,32 @@ import { hasAllowedImageSignature } from "../utils/imageFile.js";
 import { logServerError, sendServerError } from "../utils/serverError.js";
 import { validateProject } from "../validators/projectValidator.js";
 
+const removeUploadedFile = async (filePath) => {
+  if (!filePath) {
+    return;
+  }
+
+  await fs.promises.unlink(filePath).catch(console.error);
+};
+
 export const createProject = async (req, res) => {
   try {
-    const { title, description, technologies, githubUrl, liveUrl, category } =
-      req.body;
-
-    const { error } = validateProject({ ...req.body, image: "placeholder" });
+    const { error, value } = validateProject(req.body, {
+      requireImage: true,
+      hasImageFile: Boolean(req.file),
+    });
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
+
+    const { title, description, technologies, githubUrl, liveUrl, category } =
+      value;
 
     let imageUrl = null;
     if (req.file) {
       const hasValidSignature = await hasAllowedImageSignature(req.file.path);
       if (!hasValidSignature) {
-        await fs.promises.unlink(req.file.path).catch(console.error);
+        await removeUploadedFile(req.file.path);
         return res.status(400).json({
           message: "Uploaded files must contain a valid image.",
         });
@@ -29,7 +40,7 @@ export const createProject = async (req, res) => {
       const response = await uploadOnCloudinary(req.file.path);
       if (response) {
         imageUrl = response.url;
-        await fs.promises.unlink(req.file.path).catch(console.error);
+        await removeUploadedFile(req.file.path);
       } else {
         return res
           .status(500)
@@ -40,7 +51,7 @@ export const createProject = async (req, res) => {
     const project = new Project({
       title,
       description,
-      technologies: Array.isArray(technologies) ? technologies : [technologies],
+      technologies,
       githubUrl,
       liveUrl,
       category,
@@ -50,7 +61,7 @@ export const createProject = async (req, res) => {
     const savedProject = await project.save();
     res.status(201).json(savedProject);
   } catch (error) {
-    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error);
+    await removeUploadedFile(req.file?.path);
 
     const clientError = getClientErrorResponse(error);
     if (clientError) {
@@ -64,19 +75,19 @@ export const createProject = async (req, res) => {
 
 export const updateProject = async (req, res) => {
   try {
-    const { title, description, technologies, githubUrl, liveUrl, category } =
-      req.body;
-
-    const { error } = validateProject({ ...req.body, image: "placeholder" });
+    const { error, value } = validateProject(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
+
+    const { title, description, technologies, githubUrl, liveUrl, category } =
+      value;
 
     let imageUrl = null;
     if (req.file) {
       const hasValidSignature = await hasAllowedImageSignature(req.file.path);
       if (!hasValidSignature) {
-        await fs.promises.unlink(req.file.path).catch(console.error);
+        await removeUploadedFile(req.file.path);
         return res.status(400).json({
           message: "Uploaded files must contain a valid image.",
         });
@@ -85,7 +96,7 @@ export const updateProject = async (req, res) => {
       const response = await uploadOnCloudinary(req.file.path);
       if (response) {
         imageUrl = response.url;
-        await fs.promises.unlink(req.file.path).catch(console.error);
+        await removeUploadedFile(req.file.path);
       } else {
         return res
           .status(500)
@@ -96,7 +107,7 @@ export const updateProject = async (req, res) => {
     const updatedData = {
       title,
       description,
-      technologies: Array.isArray(technologies) ? technologies : [technologies],
+      technologies,
       githubUrl,
       liveUrl,
       category,
@@ -114,7 +125,7 @@ export const updateProject = async (req, res) => {
 
     res.json(project);
   } catch (error) {
-    if (req.file) await fs.promises.unlink(req.file.path).catch(console.error);
+    await removeUploadedFile(req.file?.path);
 
     const clientError = getClientErrorResponse(error);
     if (clientError) {
