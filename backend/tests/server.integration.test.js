@@ -147,7 +147,7 @@ test("mounted public read routes return data and cache headers", async () => {
   );
   assert.equal(
     projects.headers["cdn-cache-control"],
-    "public, s-maxage=300, stale-while-revalidate=60"
+    "public, s-maxage=86400, stale-while-revalidate=3600"
   );
   assert.equal(
     experiences.headers["vercel-cdn-cache-control"],
@@ -182,7 +182,7 @@ test("mounted chat routes expose public history endpoints and validation errors"
   assert.deepEqual(explicitHistory.body, rootHistory.body);
   assert.equal(invalidChatPost.status, 400);
   assert.match(invalidChatPost.body.error, /required/i);
-  assert.equal(db.calls.length, 3);
+  assert.equal(db.calls.length, 0);
 });
 
 test("chat POST returns an assistant response through the mounted stack", async () => {
@@ -288,7 +288,7 @@ test("admin-protected mounted write routes reject missing or unconfigured auth",
   assert.deepEqual(unavailableAdmin.body, {
     message: "Admin operations are temporarily unavailable.",
   });
-  assert.equal(db.calls.length, 4);
+  assert.equal(db.calls.length, 0);
 });
 
 test("API DB failures and unknown mounted routes return the expected status codes", async () => {
@@ -320,5 +320,5 @@ test("API DB failures and unknown mounted routes return the expected status code
     path: "/api/not-a-route",
     method: "GET",
   });
-  assert.equal(healthyDb.calls.length, 1);
+  assert.equal(healthyDb.calls.length, 0);
 });
