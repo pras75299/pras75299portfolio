@@ -19,7 +19,7 @@ export const setCollectionCacheHeaders = (
 export const setPortfolioReadCacheHeaders = (res) => {
   setCollectionCacheHeaders(res, {
     browserMaxAge: 0,
-    sMaxAge: 86400,
-    staleWhileRevalidate: 3600,
+    sMaxAge: 300,
+    staleWhileRevalidate: 60,
   });
 };
