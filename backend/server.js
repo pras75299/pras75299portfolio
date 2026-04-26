@@ -16,10 +16,21 @@ config();
 const PORT = process.env.PORT || 8080;
 const JSON_BODY_LIMIT = "256kb";
 const isTestEnvironment = process.env.NODE_ENV === "test";
+const resolveWarmupOnBoot = () => {
+  if (process.env.DB_WARMUP_ON_BOOT === "1") {
+    return true;
+  }
+
+  if (process.env.DB_WARMUP_ON_BOOT === "0") {
+    return false;
+  }
+
+  return process.env.VERCEL === "1";
+};
 
 export const createApp = ({
   connectDBImpl = connectDB,
-  warmupOnBoot = process.env.DB_WARMUP_ON_BOOT === "1",
+  warmupOnBoot = resolveWarmupOnBoot(),
 } = {}) => {
   const app = express();
   app.locals.connectDB = connectDBImpl;
