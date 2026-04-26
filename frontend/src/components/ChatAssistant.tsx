@@ -60,23 +60,14 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
 
     try {
       const messageText = userMessage.text.trim();
-      
+
       if (!messageText) {
         throw new Error("Message cannot be empty");
       }
 
-      const requestBody = {
-        message: messageText,
-      };
-
-      console.log("Sending chat request:", {
-        url: apiClient.chat,
-        body: requestBody,
-      });
-
       const response = await axios.post(
         apiClient.chat,
-        requestBody,
+        { message: messageText },
         {
           headers: {
             "Content-Type": "application/json",
@@ -93,7 +84,9 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ isOpen, onClose }) => {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error: unknown) {
-      console.error("Chat error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Chat request failed", error);
+      }
 
       const responseError = axios.isAxiosError(error)
         ? error.response?.data

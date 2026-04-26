@@ -16,6 +16,11 @@ interface FetchCollectionResult<T> {
   source: CollectionSource;
 }
 
+interface CollectionCacheReadResult<T> {
+  data: T[];
+  hasCache: boolean;
+}
+
 const CACHE_PREFIX = "portfolio-collection-cache:";
 const REQUEST_TIMEOUT_MS = 8000;
 const RETRY_DELAY_MS = 700;
@@ -27,17 +32,26 @@ const delay = (ms: number) =>
 
 const getCacheKey = (cacheKey: string) => `${CACHE_PREFIX}${cacheKey}`;
 
-const readCollectionCache = <T>(cacheKey: string): T[] => {
-  if (typeof window === "undefined") return [];
+const readCollectionCache = <T>(cacheKey: string): CollectionCacheReadResult<T> => {
+  if (typeof window === "undefined") {
+    return { data: [], hasCache: false };
+  }
 
   try {
     const cached = window.localStorage.getItem(getCacheKey(cacheKey));
-    if (!cached) return [];
+    if (!cached) {
+      return { data: [], hasCache: false };
+    }
 
     const parsed = JSON.parse(cached);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) {
+      return { data: [], hasCache: false };
+    }
+
+    // Preserve intentionally cached empty collections during degraded-mode reads.
+    return { data: parsed as T[], hasCache: true };
   } catch {
-    return [];
+    return { data: [], hasCache: false };
   }
 };
 
@@ -131,9 +145,9 @@ export const fetchCollection = async <TInput, TOutput = TInput>({
   } catch (error) {
     const cachedData = readCollectionCache<TOutput>(cacheKey);
 
-    if (cachedData.length > 0) {
+    if (cachedData.hasCache) {
       return {
-        data: cachedData,
+        data: cachedData.data,
         errorMessage: getRequestErrorMessage(error),
         source: "cache",
       };

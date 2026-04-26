@@ -3,12 +3,16 @@ import { MessageCircle } from "lucide-react";
 
 interface ChatButtonProps {
   onClick: () => void;
+  onIntent?: () => void;
 }
 
-const ChatButton: React.FC<ChatButtonProps> = ({ onClick }) => {
+const ChatButton: React.FC<ChatButtonProps> = ({ onClick, onIntent }) => {
   return (
     <button
       onClick={onClick}
+      onFocus={onIntent}
+      onMouseEnter={onIntent}
+      onTouchStart={onIntent}
       className="fixed bottom-6 right-6 z-40 bg-primary hover:bg-primary/90 text-primary-foreground p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 group"
       aria-label="Open AI Assistant"
     >
