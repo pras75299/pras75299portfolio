@@ -13,10 +13,12 @@ export const dispatchHttpRequest = async (
   const payload =
     body === undefined
       ? null
-      : Buffer.from(
-          typeof body === "string" ? body : JSON.stringify(body),
-          "utf8"
-        );
+      : Buffer.isBuffer(body)
+        ? body
+        : Buffer.from(
+            typeof body === "string" ? body : JSON.stringify(body),
+            "utf8"
+          );
 
   const requestHeaders = Object.fromEntries(
     Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])

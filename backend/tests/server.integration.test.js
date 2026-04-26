@@ -31,6 +31,42 @@ const originalFinders = {
 
 const cloneData = (value) => JSON.parse(JSON.stringify(value));
 
+const createMultipartFormData = (fields = [], files = []) => {
+  const boundary = `----portfolio-test-${Date.now()}`;
+  const chunks = [];
+
+  for (const [name, value] of fields) {
+    chunks.push(
+      Buffer.from(
+        `--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="${name}"\r\n\r\n` +
+          `${value}\r\n`,
+        "utf8"
+      )
+    );
+  }
+
+  for (const file of files) {
+    chunks.push(
+      Buffer.from(
+        `--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="${file.fieldName}"; filename="${file.filename}"\r\n` +
+          `Content-Type: ${file.contentType}\r\n\r\n`,
+        "utf8"
+      )
+    );
+    chunks.push(Buffer.isBuffer(file.content) ? file.content : Buffer.from(file.content, "utf8"));
+    chunks.push(Buffer.from("\r\n", "utf8"));
+  }
+
+  chunks.push(Buffer.from(`--${boundary}--\r\n`, "utf8"));
+
+  return {
+    body: Buffer.concat(chunks),
+    contentType: `multipart/form-data; boundary=${boundary}`,
+  };
+};
+
 const createQueryResult = (value) => ({
   sort() {
     return this;
@@ -147,15 +183,15 @@ test("mounted public read routes return data and cache headers", async () => {
   );
   assert.equal(
     projects.headers["cdn-cache-control"],
-    "public, s-maxage=86400, stale-while-revalidate=3600"
+    "public, s-maxage=300, stale-while-revalidate=60"
   );
   assert.equal(
     experiences.headers["vercel-cdn-cache-control"],
-    "public, s-maxage=86400, stale-while-revalidate=3600"
+    "public, s-maxage=300, stale-while-revalidate=60"
   );
   assert.equal(
     skills.headers["cdn-cache-control"],
-    "public, s-maxage=86400, stale-while-revalidate=3600"
+    "public, s-maxage=300, stale-while-revalidate=60"
   );
   assert.equal(db.calls.length, 3);
 });
@@ -287,6 +323,45 @@ test("admin-protected mounted write routes reject missing or unconfigured auth",
   assert.equal(unavailableAdmin.status, 503);
   assert.deepEqual(unavailableAdmin.body, {
     message: "Admin operations are temporarily unavailable.",
+  });
+  assert.equal(db.calls.length, 0);
+});
+
+test("invalid project uploads return 400 before opening a DB connection", async () => {
+  const db = createDbTracker();
+  const app = createApp({ connectDBImpl: db.connectDBImpl, warmupOnBoot: false });
+  const multipart = createMultipartFormData(
+    [
+      ["title", "Portfolio"],
+      ["description", "Invalid image upload"],
+      ["technologies", "React"],
+      ["githubUrl", "https://github.com/example/portfolio"],
+      ["liveUrl", "https://example.com"],
+      ["category", "web"],
+    ],
+    [
+      {
+        fieldName: "image",
+        filename: "notes.txt",
+        contentType: "text/plain",
+        content: "not an image",
+      },
+    ]
+  );
+
+  const response = await dispatchHttpRequest(app, {
+    body: multipart.body,
+    headers: {
+      authorization: "Bearer integration-admin-token",
+      "content-type": multipart.contentType,
+    },
+    method: "POST",
+    path: "/api/projects",
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(response.body, {
+    message: "Only image uploads are allowed for project images.",
   });
   assert.equal(db.calls.length, 0);
 });
